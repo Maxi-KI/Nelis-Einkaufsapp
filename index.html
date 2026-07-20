@@ -2,11 +2,11 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Neli's Angebote & Einkäufe</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Neli's Angebote">
 <meta name="theme-color" content="#FFF6EC">
 <meta name="color-scheme" content="light only">
@@ -29,19 +29,22 @@
     --gold:#FFC24B;
     --radius:20px;
   }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0;padding:0;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none;}
+  html,body{margin:0;padding:0; overscroll-behavior:none; height:100%;}
   body{
     background:var(--bg);
     color:var(--ink);
     font-family:'Nunito', sans-serif;
     min-height:100vh;
-    padding-bottom:130px;
+    padding-bottom:calc(130px + env(safe-area-inset-bottom));
     -webkit-font-smoothing:antialiased;
+    -webkit-user-select:none; user-select:none;
+    overflow-x:hidden;
   }
+  input, select, textarea{-webkit-user-select:text; user-select:text;}
   h1,h2,.display{font-family:'Baloo 2', sans-serif;}
 
-  header{padding:26px 20px 18px; display:flex; align-items:center; gap:14px;}
+  header{padding:calc(22px + env(safe-area-inset-top)) 20px 18px; display:flex; align-items:center; gap:14px;}
   header .logo{width:52px; height:52px; border-radius:16px; flex:0 0 auto; box-shadow:0 4px 10px rgba(255,143,102,0.3);}
   header h1{font-size:24px; margin:0; line-height:1.2; font-weight:700;}
   header h1 .accent{color:var(--coral);}
@@ -71,7 +74,7 @@
     padding:1px 7px; min-width:18px;
   }
 
-  .tabs{display:flex; overflow-x:auto; gap:8px; padding:0 20px 16px;}
+  .tabs{display:flex; overflow-x:auto; gap:8px; padding:0 20px 16px; -webkit-overflow-scrolling:touch;}
   .tabs::-webkit-scrollbar{display:none;}
   .tab{
     flex:0 0 auto; padding:9px 16px;
@@ -88,6 +91,13 @@
     background:var(--card); border-radius:var(--radius); margin-top:4px;
   }
   .empty .emoji{font-size:38px; display:block; margin-bottom:10px;}
+
+  .low-count-hint{
+    text-align:center; color:var(--ink-soft);
+    font-size:13px; font-weight:600;
+    padding:36px 24px 10px; opacity:0.6;
+  }
+  .low-count-hint span{display:block; font-size:26px; margin-bottom:8px;}
 
   .store-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
   .store-header h2{font-size:21px; margin:0; font-weight:700;}
@@ -140,7 +150,7 @@
   .list-group-title:first-child{margin-top:4px;}
 
   .fab{
-    position:fixed; bottom:22px; right:20px; left:20px;
+    position:fixed; bottom:calc(22px + env(safe-area-inset-bottom)); right:20px; left:20px;
     background:var(--coral); color:#fff; border:none;
     padding:17px; border-radius:18px;
     font-family:'Baloo 2', sans-serif; font-size:16px; font-weight:700;
@@ -149,7 +159,7 @@
   .fab:active{transform:scale(0.98);}
   .fab.secondary{
     background:var(--card); color:var(--ink);
-    box-shadow:0 4px 12px rgba(58,51,44,0.1); bottom:84px;
+    box-shadow:0 4px 12px rgba(58,51,44,0.1); bottom:calc(84px + env(safe-area-inset-bottom));
   }
 
   .sheet-overlay{position:fixed; inset:0; background:rgba(58,51,44,0.4); display:none; z-index:20; align-items:flex-end;}
@@ -157,8 +167,9 @@
   .sheet{
     background:var(--bg); width:100%;
     border-radius:26px 26px 0 0;
-    padding:24px 20px 30px;
+    padding:24px 20px calc(30px + env(safe-area-inset-bottom));
     max-height:88vh; overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
   }
   .sheet h3{font-family:'Baloo 2', sans-serif; font-size:20px; margin:0 0 18px; font-weight:700;}
   .field{margin-bottom:16px;}
@@ -358,6 +369,11 @@ function itemCardHtml(item, opts){
   `;
 }
 
+function lowCountHintHtml(count){
+  if(count >= 4) return '';
+  return `<div class="low-count-hint"><span>🛒</span>Trag weitere Angebote ein, um deine Woche zu füllen</div>`;
+}
+
 function renderOffersView(){
   const main = document.getElementById('main');
   main.innerHTML = '';
@@ -385,6 +401,7 @@ function renderOffersView(){
     });
     const wrap = document.createElement('div');
     wrap.innerHTML = sortedAll.map(item=>itemCardHtml(item, {storeId:item.storeId, showEdit:true, showListToggle:true, showDelete:true, showStoreTag:true})).join('');
+    wrap.innerHTML += lowCountHintHtml(sortedAll.length);
     main.appendChild(wrap);
     attachCardHandlers(main);
     return;
@@ -416,6 +433,7 @@ function renderOffersView(){
 
   const wrap = document.createElement('div');
   wrap.innerHTML = sorted.map(item=>itemCardHtml(item, {storeId:store.id, showEdit:true, showListToggle:true, showDelete:true})).join('');
+  wrap.innerHTML += lowCountHintHtml(sorted.length);
   main.appendChild(wrap);
   attachCardHandlers(main);
 }
@@ -634,8 +652,9 @@ function openSheet(existingItem, existingStoreId){
 
   renderSuggestions('');
   overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
-function closeSheet(){ overlay.classList.remove('open'); editingItem = null; }
+function closeSheet(){ overlay.classList.remove('open'); editingItem = null; document.body.style.overflow = ''; }
 
 document.getElementById('fabAdd').onclick = ()=>openSheet();
 document.getElementById('cancelBtn').onclick = closeSheet;
