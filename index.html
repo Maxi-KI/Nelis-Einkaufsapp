@@ -8,6 +8,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Neli's Angebote">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#FFF6EC">
 <meta name="color-scheme" content="light only">
 <meta name="supported-color-schemes" content="light">
@@ -54,6 +57,14 @@
     display:flex; gap:8px;
     padding:0 20px 14px;
   }
+  .backup-bar{
+    display:flex; gap:14px; padding:0 20px 14px; justify-content:flex-end;
+  }
+  .backup-bar button{
+    background:none; border:none; font-size:12px; font-weight:700;
+    color:var(--ink-soft); padding:2px 4px;
+  }
+  .backup-bar button:active{color:var(--coral);}
   .main-nav button{
     flex:1;
     padding:12px;
@@ -149,6 +160,17 @@
   }
   .list-group-title:first-child{margin-top:4px;}
 
+  .group-title{
+    font-family:'Baloo 2', sans-serif; font-size:16px; font-weight:700;
+    margin:18px 4px 8px; color:var(--ink); display:flex; align-items:baseline; gap:8px;
+  }
+  .group-title:first-of-type{margin-top:4px;}
+  .group-count{font-size:12px; font-weight:700; color:var(--ink-soft); font-family:'Nunito', sans-serif;}
+  .cheapest-badge{
+    display:block; background:var(--sage); color:#fff; font-size:10px; font-weight:800;
+    border-radius:8px; padding:2px 7px; margin-bottom:4px; text-align:center;
+  }
+
   .fab{
     position:fixed; bottom:calc(22px + env(safe-area-inset-bottom)); right:20px; left:20px;
     background:var(--coral); color:#fff; border:none;
@@ -191,6 +213,15 @@
   .suggestions{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px;}
   .chip{border-radius:20px; background:var(--coral-soft); color:var(--coral); padding:7px 13px; font-size:13px; font-weight:700;}
   .chip:active{background:var(--coral); color:#fff;}
+  .price-reference{margin-top:10px;}
+  .price-reference-label{font-size:11px; font-weight:700; color:var(--ink-soft); margin-bottom:6px;}
+  .ref-chip{
+    display:inline-flex; align-items:baseline; gap:5px;
+    border-radius:12px; background:var(--sage-soft); color:var(--sage);
+    padding:7px 12px; font-size:12px; font-weight:700; margin:0 6px 6px 0;
+  }
+  .ref-chip .ref-date{font-weight:600; opacity:0.75; font-size:10px;}
+  .ref-chip:active{background:var(--sage); color:#fff;}
   .sheet-actions{display:flex; gap:10px; margin-top:20px;}
   .btn{flex:1; padding:14px; border:none; border-radius:14px; font-family:'Baloo 2', sans-serif; font-size:15px; font-weight:700;}
   .btn-primary{background:var(--coral); color:#fff;}
@@ -215,6 +246,12 @@
   </div>
 </header>
 
+<div class="backup-bar">
+  <button id="backupExportBtn">⬇️ Sichern</button>
+  <button id="backupImportBtn">⬆️ Wiederherstellen</button>
+  <input type="file" id="backupFileInput" accept="application/json" style="display:none;">
+</div>
+
 <div class="main-nav">
   <button id="navOffers" class="active">🏷️ Angebote</button>
   <button id="navList">📝 Einkäufe <span class="badge" id="listBadge" style="display:none;">0</span></button>
@@ -236,6 +273,7 @@
       <label>Produkt</label>
       <input type="text" id="inputName" placeholder="z. B. Nudeln, Erdbeeren…" autocomplete="off">
       <div class="suggestions" id="suggestions"></div>
+      <div class="price-reference" id="priceReference"></div>
     </div>
 
     <div class="field">
@@ -279,9 +317,10 @@ const DEFAULT_STORES = ['Rewe','Aldi','Lidl','Kaufland','Netto','Edeka','Alnatur
 const DEFAULT_UNITS = ['Stück','kg','g','Liter','ml','Packung'];
 const OTHER_OPTION = '__other__';
 
-let state = { stores: [], productHistory: [], customUnits: [] };
+let state = { stores: [], productHistory: [], customUnits: [], archive: [] };
 let activeStoreId = null;
 let activeView = 'offers';
+let gesamtSearchQuery = '';
 let editingItem = null; // { storeId, itemId } wenn im Bearbeiten-Modus
 
 function uid(){ return Math.random().toString(36).slice(2,10); }
@@ -293,7 +332,7 @@ function isLikelyExpired(item){ const d = daysAgo(item.validFrom); return d!==nu
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ state = JSON.parse(raw); if(!state.productHistory) state.productHistory=[]; if(!state.customUnits) state.customUnits=[]; }
+    if(raw){ state = JSON.parse(raw); if(!state.productHistory) state.productHistory=[]; if(!state.customUnits) state.customUnits=[]; if(!state.archive) state.archive=[]; }
   }catch(e){ state = { stores: [], productHistory: [], customUnits: [] }; }
   if(state.stores.length && !activeStoreId){ activeStoreId = state.stores[0].id; }
   render();
@@ -357,11 +396,11 @@ function itemCardHtml(item, opts){
     <div class="item-card ${expired?'expired':''} ${item.checked?'checked':''}" data-item="${item.id}" data-store="${opts.storeId}">
       ${opts.showCheckbox ? `<div class="checkbox ${item.checked?'checked':''}" data-action="toggle-check">${item.checked?'✓':''}</div>` : ''}
       <div class="item-main">
-        <div class="item-name">${escapeHtml(item.name)}</div>
+        ${opts.hideName ? '' : `<div class="item-name">${escapeHtml(item.name)}</div>`}
         ${validText ? `<div class="item-valid ${expired?'expired-tag':''}">${expired?'Wahrscheinlich abgelaufen · ':''}${validText}</div>` : ''}
         ${opts.showStoreTag ? `<div class="item-store-tag">${escapeHtml(opts.storeName)}</div>` : ''}
       </div>
-      ${(item.price || item.quantity || item.unit) ? `<div class="price-tag">${item.price ? escapeHtml(item.price)+'€' : ''}${(item.quantity||item.unit) ? (item.price ? ' / ' : '') + escapeHtml(item.quantity||'') + (item.quantity&&item.unit?' ':'') + escapeHtml(item.unit||'') : ''}</div>` : ''}
+      ${(item.price || item.quantity || item.unit) ? `<div class="price-tag">${opts.badge ? `<span class="cheapest-badge">${opts.badge}</span>` : ''}${item.price ? escapeHtml(item.price)+'€' : ''}${(item.quantity||item.unit) ? (item.price ? ' / ' : '') + escapeHtml(item.quantity||'') + (item.quantity&&item.unit?' ':'') + escapeHtml(item.unit||'') : ''}</div>` : ''}
       ${opts.showEdit ? `<button class="icon-btn" data-action="edit-item" title="Bearbeiten">✏️</button>` : ''}
       ${opts.showListToggle ? `<button class="icon-btn ${item.onList?'on':''}" data-action="toggle-list" title="Zur Liste">${item.onList?'✓':'+'}</button>` : ''}
       ${opts.showDelete ? `<button class="del-btn" data-action="delete-item">✕</button>` : ''}
@@ -386,22 +425,77 @@ function renderOffersView(){
   if(activeStoreId === 'ALL'){
     const header = document.createElement('div');
     header.className = 'store-header';
-    header.innerHTML = `<h2>📋 Gesamt</h2>`;
+    header.innerHTML = `<h2>📋 Gesamt</h2><button data-action="close-week">Abgelaufene archivieren</button>`;
+    header.querySelector('[data-action="close-week"]').onclick = closeWeek;
     main.appendChild(header);
 
     const allItems = allItemsFlat();
     if(allItems.length === 0){
-      main.innerHTML += '<div class="empty"><span class="emoji">🏷️</span>Noch keine Angebote eingetragen.</div>';
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'empty';
+      emptyDiv.innerHTML = '<span class="emoji">🏷️</span>Noch keine Angebote eingetragen.';
+      main.appendChild(emptyDiv);
       return;
     }
-    const sortedAll = [...allItems].sort((a,b)=>{
-      const ea = isLikelyExpired(a), eb = isLikelyExpired(b);
-      if(ea !== eb) return ea ? 1 : -1;
-      return (b.validFrom||'').localeCompare(a.validFrom||'');
+
+    const searchBox = document.createElement('div');
+    searchBox.className = 'field';
+    searchBox.innerHTML = `<input type="text" id="gesamtSearch" placeholder="🔍 Angebote durchsuchen…" value="${escapeHtml(gesamtSearchQuery)}">`;
+    main.appendChild(searchBox);
+    searchBox.querySelector('input').oninput = (e)=>{
+      gesamtSearchQuery = e.target.value;
+      renderOffersView();
+      const freshInput = document.getElementById('gesamtSearch');
+      if(freshInput){ freshInput.focus(); freshInput.setSelectionRange(freshInput.value.length, freshInput.value.length); }
+    };
+
+    const q = gesamtSearchQuery.trim().toLowerCase();
+    const filtered = q ? allItems.filter(i=>i.name.toLowerCase().includes(q)) : allItems;
+
+    if(filtered.length === 0){
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'empty';
+      emptyDiv.innerHTML = '<span class="emoji">🔍</span>Keine Angebote gefunden.';
+      main.appendChild(emptyDiv);
+      return;
+    }
+
+    // Nach normalisiertem Produktnamen gruppieren (für Preisvergleich bei Duplikaten)
+    const groups = {};
+    filtered.forEach(item=>{
+      const key = item.name.trim().toLowerCase();
+      if(!groups[key]) groups[key] = [];
+      groups[key].push(item);
     });
+
     const wrap = document.createElement('div');
-    wrap.innerHTML = sortedAll.map(item=>itemCardHtml(item, {storeId:item.storeId, showEdit:true, showListToggle:true, showDelete:true, showStoreTag:true})).join('');
-    wrap.innerHTML += lowCountHintHtml(sortedAll.length);
+    const sortedKeys = Object.keys(groups).sort((ka,kb)=>{
+      const a = groups[ka], b = groups[kb];
+      const ea = a.every(isLikelyExpired), eb = b.every(isLikelyExpired);
+      if(ea !== eb) return ea ? 1 : -1;
+      const la = Math.max(...a.map(i=>i.validFrom||'')), lb = Math.max(...b.map(i=>i.validFrom||''));
+      return (lb||'').localeCompare(la||'');
+    });
+
+    sortedKeys.forEach(key=>{
+      const groupItems = groups[key];
+      if(groupItems.length === 1){
+        wrap.innerHTML += itemCardHtml(groupItems[0], {storeId:groupItems[0].storeId, showEdit:true, showListToggle:true, showDelete:true, showStoreTag:true});
+      } else {
+        // Mehrfach-Angebot: gleicher Name in mehreren Läden -> günstigsten Preis markieren
+        const withNumericPrice = groupItems.map(i=>({item:i, num: parseFloat((i.price||'').replace(',','.'))})).filter(x=>!isNaN(x.num));
+        const cheapestId = withNumericPrice.length ? withNumericPrice.reduce((a,b)=>a.num<=b.num?a:b).item.id : null;
+        wrap.innerHTML += `<div class="group-title">🔁 ${escapeHtml(groupItems[0].name)} <span class="group-count">${groupItems.length}× im Angebot</span></div>`;
+        groupItems.forEach(item=>{
+          wrap.innerHTML += itemCardHtml(item, {
+            storeId:item.storeId, showEdit:true, showListToggle:true, showDelete:true,
+            showStoreTag:true, hideName:true,
+            badge: item.id===cheapestId ? '✓ Günstigster' : null
+          });
+        });
+      }
+    });
+    wrap.innerHTML += lowCountHintHtml(filtered.length);
     main.appendChild(wrap);
     attachCardHandlers(main);
     return;
@@ -559,6 +653,57 @@ const inputQuantity = document.getElementById('inputQuantity');
 const inputUnitSelect = document.getElementById('inputUnitSelect');
 const inputUnitCustom = document.getElementById('inputUnitCustom');
 
+function getPriceReferences(name){
+  const key = name.trim().toLowerCase();
+  if(!key) return [];
+  const results = [];
+  allItemsFlat().forEach(item=>{
+    if(item.name.trim().toLowerCase()===key){
+      results.push({storeName:item.storeName, price:item.price, quantity:item.quantity, unit:item.unit, date:item.validFrom||'', source:'aktiv'});
+    }
+  });
+  (state.archive||[]).forEach(rec=>{
+    if(rec.name.trim().toLowerCase()===key){
+      results.push({storeName:rec.storeName, price:rec.price, quantity:rec.quantity, unit:rec.unit, date:rec.validFrom||rec.archivedAt||'', source:'archiv'});
+    }
+  });
+  // Pro Laden nur den jeweils neuesten Eintrag behalten
+  const byStore = {};
+  results.forEach(r=>{
+    if(!byStore[r.storeName] || (r.date||'') > (byStore[r.storeName].date||'')){
+      byStore[r.storeName] = r;
+    }
+  });
+  return Object.values(byStore).sort((a,b)=>(b.date||'').localeCompare(a.date||'')).slice(0,4);
+}
+
+function renderPriceReference(name){
+  const box = document.getElementById('priceReference');
+  const refs = getPriceReferences(name);
+  if(refs.length === 0){ box.innerHTML=''; return; }
+  box.innerHTML = '<div class="price-reference-label">📅 Zuletzt gesehen</div>' +
+    refs.map(r=>`<span class="ref-chip" data-store="${escapeHtml(r.storeName)}" data-price="${escapeHtml(r.price||'')}" data-quantity="${escapeHtml(r.quantity||'')}" data-unit="${escapeHtml(r.unit||'')}">${escapeHtml(r.storeName)}${r.price?' · '+escapeHtml(r.price)+'€':''}${r.date?` <span class="ref-date">(${fmtDate(r.date)})</span>`:''}</span>`).join('');
+  box.querySelectorAll('.ref-chip').forEach(chip=>{
+    chip.onclick = ()=>{
+      const storeName = chip.dataset.store;
+      if([...inputStoreSelect.options].some(o=>o.value===storeName)){
+        inputStoreSelect.value = storeName;
+        inputStoreCustom.style.display='none';
+      } else {
+        inputStoreSelect.value = OTHER_OPTION;
+        inputStoreCustom.style.display='block';
+        inputStoreCustom.value = storeName;
+      }
+      if(chip.dataset.price) inputPrice.value = chip.dataset.price;
+      if(chip.dataset.quantity) inputQuantity.value = chip.dataset.quantity;
+      if(chip.dataset.unit && [...inputUnitSelect.options].some(o=>o.value===chip.dataset.unit)){
+        inputUnitSelect.value = chip.dataset.unit;
+      }
+      showToast('Übernommen — Preis ggf. anpassen');
+    };
+  });
+}
+
 function knownStoreNames(){
   const names = [...DEFAULT_STORES];
   state.stores.forEach(s=>{ if(!names.includes(s.name)) names.push(s.name); });
@@ -615,12 +760,12 @@ function renderSuggestions(filterText){
   list = list.slice(0, 8);
   suggestionsBox.innerHTML = list.map(name=>`<div class="chip" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`).join('');
   suggestionsBox.querySelectorAll('.chip').forEach(chip=>{
-    chip.onclick = ()=>{ inputName.value = chip.dataset.name; renderSuggestions(inputName.value); };
+    chip.onclick = ()=>{ inputName.value = chip.dataset.name; renderSuggestions(inputName.value); renderPriceReference(inputName.value); };
   });
 }
 
-inputName.oninput = ()=>renderSuggestions(inputName.value);
-inputName.onfocus = ()=>renderSuggestions(inputName.value);
+inputName.oninput = ()=>{ renderSuggestions(inputName.value); renderPriceReference(inputName.value); };
+inputName.onfocus = ()=>{ renderSuggestions(inputName.value); renderPriceReference(inputName.value); };
 
 function addToHistory(name){
   state.productHistory = state.productHistory.filter(n=>n.toLowerCase()!==name.toLowerCase());
@@ -651,9 +796,34 @@ function openSheet(existingItem, existingStoreId){
   inputUnitCustom.style.display='none'; inputUnitCustom.value='';
 
   renderSuggestions('');
+  renderPriceReference(existingItem ? existingItem.name : '');
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
+function closeWeek(){
+  const allItems = allItemsFlat();
+  const toArchive = allItems.filter(isLikelyExpired);
+  if(toArchive.length === 0){ showToast('Keine abgelaufenen Angebote zum Archivieren'); return; }
+  if(!confirm(`${toArchive.length} abgelaufene(s) Angebot(e) ins Archiv verschieben? Aktuelle bzw. schon für die neue Woche eingetragene Angebote bleiben unberührt. Steht eines davon noch auf der Einkaufsliste, wird es dort ebenfalls entfernt.`)) return;
+
+  const now = todayISO();
+  toArchive.forEach(item=>{
+    state.archive.push({
+      name:item.name, storeName:item.storeName,
+      price:item.price, quantity:item.quantity, unit:item.unit,
+      validFrom:item.validFrom, archivedAt:now
+    });
+    const store = state.stores.find(s=>s.id===item.storeId);
+    if(store) store.items = store.items.filter(i=>i.id!==item.id);
+  });
+  // Archiv nicht unbegrenzt wachsen lassen
+  if(state.archive.length > 300){ state.archive = state.archive.slice(state.archive.length-300); }
+
+  saveState();
+  render();
+  showToast(`${toArchive.length} Angebot(e) archiviert`);
+}
+
 function closeSheet(){ overlay.classList.remove('open'); editingItem = null; document.body.style.overflow = ''; }
 
 document.getElementById('fabAdd').onclick = ()=>openSheet();
@@ -708,6 +878,59 @@ document.getElementById('saveBtn').onclick = ()=>{
   render();
   saveState();
   showToast('Gespeichert ✓');
+};
+
+window.addEventListener('pageshow', function(e){
+  if (e.persisted) {
+    location.reload();
+  }
+});
+
+document.getElementById('backupExportBtn').onclick = ()=>{
+  const dataStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([dataStr], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const dateStr = todayISO();
+  a.href = url;
+  a.download = `nelis-angebote-backup-${dateStr}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Backup wird heruntergeladen…');
+};
+
+document.getElementById('backupImportBtn').onclick = ()=>{
+  document.getElementById('backupFileInput').click();
+};
+
+document.getElementById('backupFileInput').onchange = (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const parsed = JSON.parse(evt.target.result);
+      if(!parsed || !Array.isArray(parsed.stores)){
+        showToast('Ungültige Backup-Datei');
+        return;
+      }
+      if(!confirm('Aktuelle Daten werden durch das Backup ersetzt. Fortfahren?')) return;
+      state = parsed;
+      if(!state.productHistory) state.productHistory = [];
+      if(!state.customUnits) state.customUnits = [];
+      if(!state.archive) state.archive = [];
+      activeStoreId = state.stores.length ? state.stores[0].id : null;
+      saveState();
+      render();
+      showToast('Backup wiederhergestellt ✓');
+    }catch(err){
+      showToast('Datei konnte nicht gelesen werden');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 };
 
 loadState();
