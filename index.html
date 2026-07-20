@@ -33,17 +33,21 @@
     --radius:20px;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none;}
-  html,body{margin:0;padding:0; overscroll-behavior:none; height:100%;}
+  html,body{margin:0;padding:0; height:100%; overflow:hidden; position:fixed; width:100%;}
+  #scrollWrap{
+    height:100%; width:100%;
+    overflow-y:auto; overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:none;
+  }
   body{
     background:var(--bg);
     color:var(--ink);
     font-family:'Nunito', sans-serif;
-    min-height:100vh;
-    padding-bottom:calc(130px + env(safe-area-inset-bottom));
     -webkit-font-smoothing:antialiased;
     -webkit-user-select:none; user-select:none;
-    overflow-x:hidden;
   }
+  #scrollWrap{padding-bottom:calc(130px + env(safe-area-inset-bottom));}
   input, select, textarea{-webkit-user-select:text; user-select:text;}
   h1,h2,.display{font-family:'Baloo 2', sans-serif;}
 
@@ -57,26 +61,27 @@
     display:flex; gap:8px;
     padding:0 20px 14px;
   }
-  .backup-bar{
-    display:flex; gap:14px; padding:0 20px 14px; justify-content:flex-end;
+  .settings-card{
+    background:var(--card); border-radius:var(--radius);
+    padding:18px; margin-bottom:14px; box-shadow:0 3px 10px rgba(58,51,44,0.06);
   }
-  .backup-bar button{
-    background:none; border:none; font-size:12px; font-weight:700;
-    color:var(--ink-soft); padding:2px 4px;
-  }
-  .backup-bar button:active{color:var(--coral);}
+  .settings-card h3{font-family:'Baloo 2', sans-serif; font-size:16px; margin:0 0 6px; font-weight:700;}
+  .settings-card p{font-size:13px; color:var(--ink-soft); margin:0 0 14px; line-height:1.4;}
+  .settings-card .btn{width:100%; margin-bottom:10px;}
+  .settings-card .btn:last-child{margin-bottom:0;}
   .main-nav button{
     flex:1;
-    padding:12px;
+    padding:10px 4px;
     border-radius:14px;
     border:none;
     font-family:'Baloo 2', sans-serif;
-    font-size:15px;
+    font-size:12.5px;
     font-weight:600;
     background:var(--card);
     color:var(--ink-soft);
-    display:flex; align-items:center; justify-content:center; gap:6px;
+    display:flex; align-items:center; justify-content:center; gap:4px;
     box-shadow:0 2px 8px rgba(58,51,44,0.06);
+    white-space:nowrap;
   }
   .main-nav button.active{background:var(--coral-soft); color:var(--coral); font-weight:800;}
   .main-nav .badge{
@@ -238,6 +243,8 @@
 </head>
 <body>
 
+<div id="scrollWrap">
+
 <header>
   <img class="logo" alt="Logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23FF8F66'/%3E%3Cpath d='M35 38 C35 27 65 27 65 38' stroke='%23FFF6EC' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3Cpath d='M27 38 H73 L67 78 C66.3 82 63 85 59 85 H41 C37 85 33.7 82 33 78 Z' fill='%23FFF6EC'/%3E%3Ccircle cx='50' cy='58' r='9' fill='%23FF8F66'/%3E%3Cpath d='M50 53 L50 63 M45.5 58 L54.5 58' stroke='%23FFF6EC' stroke-width='3.4' stroke-linecap='round'/%3E%3Cg transform='translate(68,20) rotate(35)'%3E%3Crect x='0' y='0' width='16' height='16' rx='4' fill='%236FA97C'/%3E%3Ccircle cx='4' cy='4' r='2' fill='%23E1F0E2'/%3E%3C/g%3E%3C/svg%3E">
   <div>
@@ -246,15 +253,11 @@
   </div>
 </header>
 
-<div class="backup-bar">
-  <button id="backupExportBtn">⬇️ Sichern</button>
-  <button id="backupImportBtn">⬆️ Wiederherstellen</button>
-  <input type="file" id="backupFileInput" accept="application/json" style="display:none;">
-</div>
-
 <div class="main-nav">
   <button id="navOffers" class="active">🏷️ Angebote</button>
   <button id="navList">📝 Einkäufe <span class="badge" id="listBadge" style="display:none;">0</span></button>
+  <button id="navArchive">🗄️ Archiv</button>
+  <button id="navSettings">⚙️ Mehr</button>
 </div>
 
 <div class="tabs" id="tabs"></div>
@@ -262,6 +265,8 @@
 <main id="main">
   <div class="loading">Lädt…</div>
 </main>
+
+</div>
 
 <button class="fab" id="fabAdd">+ Angebot eintragen</button>
 
@@ -321,6 +326,7 @@ let state = { stores: [], productHistory: [], customUnits: [], archive: [] };
 let activeStoreId = null;
 let activeView = 'offers';
 let gesamtSearchQuery = '';
+let archiveSearchQuery = '';
 let editingItem = null; // { storeId, itemId } wenn im Bearbeiten-Modus
 
 function uid(){ return Math.random().toString(36).slice(2,10); }
@@ -332,7 +338,13 @@ function isLikelyExpired(item){ const d = daysAgo(item.validFrom); return d!==nu
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){ state = JSON.parse(raw); if(!state.productHistory) state.productHistory=[]; if(!state.customUnits) state.customUnits=[]; if(!state.archive) state.archive=[]; }
+    if(raw){
+      state = JSON.parse(raw);
+      if(!state.productHistory) state.productHistory=[];
+      if(!state.customUnits) state.customUnits=[];
+      if(!state.archive) state.archive=[];
+      state.archive.forEach(rec=>{ if(!rec.id) rec.id = uid(); });
+    }
   }catch(e){ state = { stores: [], productHistory: [], customUnits: [] }; }
   if(state.stores.length && !activeStoreId){ activeStoreId = state.stores[0].id; }
   render();
@@ -361,6 +373,8 @@ function allItemsFlat(){
 function renderNav(){
   document.getElementById('navOffers').classList.toggle('active', activeView==='offers');
   document.getElementById('navList').classList.toggle('active', activeView==='list');
+  document.getElementById('navArchive').classList.toggle('active', activeView==='archive');
+  document.getElementById('navSettings').classList.toggle('active', activeView==='settings');
   document.getElementById('tabs').style.display = activeView==='offers' ? 'flex' : 'none';
   document.getElementById('fabAdd').style.display = activeView==='offers' ? 'block' : 'none';
 
@@ -565,6 +579,103 @@ function renderListView(){
   attachCardHandlers(main);
 }
 
+function archiveEntryHtml(rec){
+  const dateLabel = rec.validFrom ? fmtDate(rec.validFrom) : (rec.archivedAt ? fmtDate(rec.archivedAt) : '');
+  return `
+    <div class="item-card" data-archive-id="${rec.id}">
+      <div class="item-main">
+        <div class="item-name">${escapeHtml(rec.name)}</div>
+        <div class="item-store-tag">${escapeHtml(rec.storeName)}${dateLabel ? ' · '+dateLabel : ''}</div>
+      </div>
+      ${(rec.price || rec.quantity || rec.unit) ? `<div class="price-tag">${rec.price?escapeHtml(rec.price)+'€':''}${(rec.quantity||rec.unit) ? (rec.price?' / ':'') + escapeHtml(rec.quantity||'') + (rec.quantity&&rec.unit?' ':'') + escapeHtml(rec.unit||'') : ''}</div>` : ''}
+      <button class="del-btn" data-action="delete-archive">✕</button>
+    </div>
+  `;
+}
+
+function renderArchiveView(){
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  const header = document.createElement('div');
+  header.className = 'store-header';
+  header.innerHTML = `<h2>🗄️ Archiv</h2>${(state.archive||[]).length ? `<button data-action="clear-archive">Archiv leeren</button>` : ''}`;
+  const clearBtn = header.querySelector('[data-action="clear-archive"]');
+  if(clearBtn) clearBtn.onclick = clearArchive;
+  main.appendChild(header);
+
+  if(!state.archive || state.archive.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = '<span class="emoji">🗄️</span>Noch nichts archiviert.<br>Abgelaufene Angebote landen hier, sobald du sie in der Gesamt-Ansicht archivierst.';
+    main.appendChild(empty);
+    return;
+  }
+
+  const searchBox = document.createElement('div');
+  searchBox.className = 'field';
+  searchBox.innerHTML = `<input type="text" id="archiveSearch" placeholder="🔍 Archiv durchsuchen…" value="${escapeHtml(archiveSearchQuery)}">`;
+  main.appendChild(searchBox);
+  searchBox.querySelector('input').oninput = (e)=>{
+    archiveSearchQuery = e.target.value;
+    renderArchiveView();
+    const freshInput = document.getElementById('archiveSearch');
+    if(freshInput){ freshInput.focus(); freshInput.setSelectionRange(freshInput.value.length, freshInput.value.length); }
+  };
+
+  const q = archiveSearchQuery.trim().toLowerCase();
+  const filtered = q ? state.archive.filter(r=>r.name.toLowerCase().includes(q)) : state.archive;
+
+  if(filtered.length === 0){
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'empty';
+    emptyDiv.innerHTML = '<span class="emoji">🔍</span>Keine Archiveinträge gefunden.';
+    main.appendChild(emptyDiv);
+    return;
+  }
+
+  // Nach Produktname gruppieren, neueste Einträge zuerst
+  const groups = {};
+  filtered.forEach(rec=>{
+    const key = rec.name.trim().toLowerCase();
+    if(!groups[key]) groups[key] = [];
+    groups[key].push(rec);
+  });
+  const sortedKeys = Object.keys(groups).sort((ka,kb)=>{
+    const la = Math.max(...groups[ka].map(r=>r.validFrom||r.archivedAt||''));
+    const lb = Math.max(...groups[kb].map(r=>r.validFrom||r.archivedAt||''));
+    return (lb||'').localeCompare(la||'');
+  });
+
+  const wrap = document.createElement('div');
+  sortedKeys.forEach(key=>{
+    const recs = [...groups[key]].sort((a,b)=>(b.validFrom||b.archivedAt||'').localeCompare(a.validFrom||a.archivedAt||''));
+    wrap.innerHTML += `<div class="group-title">${escapeHtml(recs[0].name)} <span class="group-count">${recs.length}× archiviert</span></div>`;
+    recs.forEach(rec=>{ wrap.innerHTML += archiveEntryHtml(rec); });
+  });
+  main.appendChild(wrap);
+
+  wrap.querySelectorAll('[data-action="delete-archive"]').forEach(btn=>{
+    btn.onclick = (e)=>{
+      const card = e.target.closest('.item-card');
+      deleteArchiveEntry(card.dataset.archiveId);
+    };
+  });
+}
+
+function deleteArchiveEntry(id){
+  state.archive = state.archive.filter(r=>r.id!==id);
+  saveState();
+  render();
+}
+
+function clearArchive(){
+  if(!confirm('Wirklich das komplette Archiv löschen? Das entfernt alle alten Preis-Referenzen unwiderruflich.')) return;
+  state.archive = [];
+  saveState();
+  render();
+}
+
 function attachCardHandlers(container){
   container.querySelectorAll('[data-action="edit-item"]').forEach(btn=>{
     btn.onclick = (e)=>{ const card = e.target.closest('.item-card'); const item = findItem(card.dataset.store, card.dataset.item); if(item) openSheet(item, card.dataset.store); };
@@ -588,7 +699,9 @@ function render(){
   renderNav();
   renderTabs();
   if(activeView==='offers') renderOffersView();
-  else renderListView();
+  else if(activeView==='list') renderListView();
+  else if(activeView==='archive') renderArchiveView();
+  else renderSettingsView();
 }
 
 function deleteStore(storeId){
@@ -640,6 +753,8 @@ function clearCheckedFromList(){
 
 document.getElementById('navOffers').onclick = ()=>{ activeView='offers'; render(); };
 document.getElementById('navList').onclick = ()=>{ activeView='list'; render(); };
+document.getElementById('navArchive').onclick = ()=>{ activeView='archive'; render(); };
+document.getElementById('navSettings').onclick = ()=>{ activeView='settings'; render(); };
 
 // --- Sheet ---
 const overlay = document.getElementById('sheetOverlay');
@@ -809,6 +924,7 @@ function closeWeek(){
   const now = todayISO();
   toArchive.forEach(item=>{
     state.archive.push({
+      id: uid(),
       name:item.name, storeName:item.storeName,
       price:item.price, quantity:item.quantity, unit:item.unit,
       validFrom:item.validFrom, archivedAt:now
@@ -886,52 +1002,73 @@ window.addEventListener('pageshow', function(e){
   }
 });
 
-document.getElementById('backupExportBtn').onclick = ()=>{
-  const dataStr = JSON.stringify(state, null, 2);
-  const blob = new Blob([dataStr], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const dateStr = todayISO();
-  a.href = url;
-  a.download = `nelis-angebote-backup-${dateStr}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('Backup wird heruntergeladen…');
-};
+function renderSettingsView(){
+  const main = document.getElementById('main');
+  main.innerHTML = '';
 
-document.getElementById('backupImportBtn').onclick = ()=>{
-  document.getElementById('backupFileInput').click();
-};
+  const header = document.createElement('div');
+  header.className = 'store-header';
+  header.innerHTML = `<h2>⚙️ Mehr</h2>`;
+  main.appendChild(header);
 
-document.getElementById('backupFileInput').onchange = (e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = (evt)=>{
-    try{
-      const parsed = JSON.parse(evt.target.result);
-      if(!parsed || !Array.isArray(parsed.stores)){
-        showToast('Ungültige Backup-Datei');
-        return;
-      }
-      if(!confirm('Aktuelle Daten werden durch das Backup ersetzt. Fortfahren?')) return;
-      state = parsed;
-      if(!state.productHistory) state.productHistory = [];
-      if(!state.customUnits) state.customUnits = [];
-      if(!state.archive) state.archive = [];
-      activeStoreId = state.stores.length ? state.stores[0].id : null;
-      saveState();
-      render();
-      showToast('Backup wiederhergestellt ✓');
-    }catch(err){
-      showToast('Datei konnte nicht gelesen werden');
-    }
+  const card = document.createElement('div');
+  card.className = 'settings-card';
+  card.innerHTML = `
+    <h3>💾 Backup</h3>
+    <p>Alle Angebote, die Einkaufsliste und das Archiv als Datei sichern oder aus einer Sicherung wiederherstellen. Die Daten liegen sonst nur auf diesem Gerät.</p>
+    <button class="btn btn-primary" id="backupExportBtn">⬇️ Backup herunterladen</button>
+    <button class="btn btn-secondary" id="backupImportBtn">⬆️ Backup wiederherstellen</button>
+    <input type="file" id="backupFileInput" accept="application/json" style="display:none;">
+  `;
+  main.appendChild(card);
+
+  document.getElementById('backupExportBtn').onclick = ()=>{
+    const dataStr = JSON.stringify(state, null, 2);
+    const blob = new Blob([dataStr], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `nelis-angebote-backup-${todayISO()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Backup wird heruntergeladen…');
   };
-  reader.readAsText(file);
-  e.target.value = '';
-};
+
+  document.getElementById('backupImportBtn').onclick = ()=>{
+    document.getElementById('backupFileInput').click();
+  };
+
+  document.getElementById('backupFileInput').onchange = (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt)=>{
+      try{
+        const parsed = JSON.parse(evt.target.result);
+        if(!parsed || !Array.isArray(parsed.stores)){
+          showToast('Ungültige Backup-Datei');
+          return;
+        }
+        if(!confirm('Aktuelle Daten werden durch das Backup ersetzt. Fortfahren?')) return;
+        state = parsed;
+        if(!state.productHistory) state.productHistory = [];
+        if(!state.customUnits) state.customUnits = [];
+        if(!state.archive) state.archive = [];
+        state.archive.forEach(rec=>{ if(!rec.id) rec.id = uid(); });
+        activeStoreId = state.stores.length ? state.stores[0].id : null;
+        saveState();
+        render();
+        showToast('Backup wiederhergestellt ✓');
+      }catch(err){
+        showToast('Datei konnte nicht gelesen werden');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+}
 
 loadState();
 </script>
