@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Neli's Angebote & Einkäufe</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Neli's Angebote">
+<meta name="theme-color" content="#FFF6EC">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
+<style>:root, html{ color-scheme: light only; }</style>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23FF8F66'/%3E%3Cpath d='M35 38 C35 27 65 27 65 38' stroke='%23FFF6EC' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3Cpath d='M27 38 H73 L67 78 C66.3 82 63 85 59 85 H41 C37 85 33.7 82 33 78 Z' fill='%23FFF6EC'/%3E%3Ccircle cx='50' cy='58' r='9' fill='%23FF8F66'/%3E%3Cpath d='M50 53 L50 63 M45.5 58 L54.5 58' stroke='%23FFF6EC' stroke-width='3.4' stroke-linecap='round'/%3E%3Cg transform='translate(68,20) rotate(35)'%3E%3Crect x='0' y='0' width='16' height='16' rx='4' fill='%236FA97C'/%3E%3Ccircle cx='4' cy='4' r='2' fill='%23E1F0E2'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23FF8F66'/%3E%3Cpath d='M35 38 C35 27 65 27 65 38' stroke='%23FFF6EC' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3Cpath d='M27 38 H73 L67 78 C66.3 82 63 85 59 85 H41 C37 85 33.7 82 33 78 Z' fill='%23FFF6EC'/%3E%3Ccircle cx='50' cy='58' r='9' fill='%23FF8F66'/%3E%3Cpath d='M50 53 L50 63 M45.5 58 L54.5 58' stroke='%23FFF6EC' stroke-width='3.4' stroke-linecap='round'/%3E%3Cg transform='translate(68,20) rotate(35)'%3E%3Crect x='0' y='0' width='16' height='16' rx='4' fill='%236FA97C'/%3E%3Ccircle cx='4' cy='4' r='2' fill='%23E1F0E2'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFF6EC;
+    --card:#FFFFFF;
+    --ink:#3A332C;
+    --ink-soft:#8C8378;
+    --coral:#FF8F66;
+    --coral-soft:#FFE3D6;
+    --sage:#6FA97C;
+    --sage-soft:#E1F0E2;
+    --gold:#FFC24B;
+    --radius:20px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Nunito', sans-serif;
+    min-height:100vh;
+    padding-bottom:130px;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,.display{font-family:'Baloo 2', sans-serif;}
+
+  header{padding:26px 20px 18px; display:flex; align-items:center; gap:14px;}
+  header .logo{width:52px; height:52px; border-radius:16px; flex:0 0 auto; box-shadow:0 4px 10px rgba(255,143,102,0.3);}
+  header h1{font-size:24px; margin:0; line-height:1.2; font-weight:700;}
+  header h1 .accent{color:var(--coral);}
+  header .sub{font-size:14px; color:var(--ink-soft); margin-top:4px; font-weight:600;}
+
+  .main-nav{
+    display:flex; gap:8px;
+    padding:0 20px 14px;
+  }
+  .main-nav button{
+    flex:1;
+    padding:12px;
+    border-radius:14px;
+    border:none;
+    font-family:'Baloo 2', sans-serif;
+    font-size:15px;
+    font-weight:600;
+    background:var(--card);
+    color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    box-shadow:0 2px 8px rgba(58,51,44,0.06);
+  }
+  .main-nav button.active{background:var(--coral-soft); color:var(--coral); font-weight:800;}
+  .main-nav .badge{
+    background:var(--coral); color:#fff;
+    border-radius:20px; font-size:11px; font-weight:800;
+    padding:1px 7px; min-width:18px;
+  }
+
+  .tabs{display:flex; overflow-x:auto; gap:8px; padding:0 20px 16px;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto; padding:9px 16px;
+    border-radius:20px; font-weight:700; font-size:13px;
+    background:var(--card); color:var(--ink-soft);
+    white-space:nowrap; box-shadow:0 2px 6px rgba(58,51,44,0.05);
+  }
+  .tab.active{background:var(--ink); color:#fff;}
+
+  main{padding:0 20px;}
+  .empty{
+    text-align:center; padding:50px 24px;
+    color:var(--ink-soft); font-weight:600; font-size:15px;
+    background:var(--card); border-radius:var(--radius); margin-top:4px;
+  }
+  .empty .emoji{font-size:38px; display:block; margin-bottom:10px;}
+
+  .store-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .store-header h2{font-size:21px; margin:0; font-weight:700;}
+  .store-header button{
+    background:none; border:none; font-size:13px; font-weight:700;
+    color:var(--ink-soft); padding:6px 10px; border-radius:10px;
+  }
+  .store-header button:active{background:var(--coral-soft);}
+
+  .item-card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:12px;
+    display:flex; align-items:center; gap:12px;
+    box-shadow:0 3px 10px rgba(58,51,44,0.06);
+  }
+  .item-card.expired{opacity:0.5;}
+  .item-card.checked .item-name{text-decoration:line-through; opacity:0.55;}
+  .item-main{flex:1; min-width:0;}
+  .item-name{font-weight:700; font-size:16px;}
+  .item-valid{font-size:12px; font-weight:700; color:var(--sage); margin-top:4px;}
+  .item-valid.expired-tag{color:var(--coral);}
+  .item-store-tag{font-size:12px; font-weight:700; color:var(--ink-soft); margin-top:4px;}
+
+  .price-tag{
+    font-family:'Baloo 2', sans-serif; font-weight:700;
+    background:var(--coral-soft); color:var(--coral);
+    padding:6px 12px; border-radius:12px; font-size:16px; white-space:nowrap;
+  }
+
+  .icon-btn{
+    background:var(--sage-soft); border:none; width:38px; height:38px;
+    border-radius:12px; font-size:18px; color:var(--sage); font-weight:800;
+    flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+  }
+  .icon-btn.on{background:var(--sage); color:#fff;}
+  .del-btn{background:none; border:none; font-size:18px; color:var(--ink-soft); opacity:0.6; padding:4px 6px; flex:0 0 auto;}
+  .checkbox{
+    width:28px; height:28px; border-radius:9px; border:2px solid var(--sage);
+    flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+    font-weight:800; background:#fff; color:var(--sage);
+  }
+  .checkbox.checked{background:var(--sage); color:#fff; border-color:var(--sage);}
+
+  .list-group-title{
+    font-family:'Baloo 2', sans-serif; font-size:14px; font-weight:700;
+    margin:20px 0 10px; color:var(--ink-soft);
+  }
+  .list-group-title:first-child{margin-top:4px;}
+
+  .fab{
+    position:fixed; bottom:22px; right:20px; left:20px;
+    background:var(--coral); color:#fff; border:none;
+    padding:17px; border-radius:18px;
+    font-family:'Baloo 2', sans-serif; font-size:16px; font-weight:700;
+    box-shadow:0 6px 18px rgba(255,143,102,0.45);
+  }
+  .fab:active{transform:scale(0.98);}
+  .fab.secondary{
+    background:var(--card); color:var(--ink);
+    box-shadow:0 4px 12px rgba(58,51,44,0.1); bottom:84px;
+  }
+
+  .sheet-overlay{position:fixed; inset:0; background:rgba(58,51,44,0.4); display:none; z-index:20; align-items:flex-end;}
+  .sheet-overlay.open{display:flex;}
+  .sheet{
+    background:var(--bg); width:100%;
+    border-radius:26px 26px 0 0;
+    padding:24px 20px 30px;
+    max-height:88vh; overflow-y:auto;
+  }
+  .sheet h3{font-family:'Baloo 2', sans-serif; font-size:20px; margin:0 0 18px; font-weight:700;}
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:6px;}
+  .field input, .field select{
+    width:100%; border:none; background:var(--card);
+    padding:13px 14px; font-size:16px; font-family:'Nunito', sans-serif;
+    border-radius:14px; appearance:none; -webkit-appearance:none;
+    box-shadow:0 2px 6px rgba(58,51,44,0.05);
+  }
+  .field select{
+    background-image:linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+    background-position: calc(100% - 18px) center, calc(100% - 13px) center;
+    background-size:5px 5px, 5px 5px; background-repeat:no-repeat;
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--coral);}
+  .row2{display:flex; gap:10px;}
+  .row2 .field{flex:1;}
+  .suggestions{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px;}
+  .chip{border-radius:20px; background:var(--coral-soft); color:var(--coral); padding:7px 13px; font-size:13px; font-weight:700;}
+  .chip:active{background:var(--coral); color:#fff;}
+  .sheet-actions{display:flex; gap:10px; margin-top:20px;}
+  .btn{flex:1; padding:14px; border:none; border-radius:14px; font-family:'Baloo 2', sans-serif; font-size:15px; font-weight:700;}
+  .btn-primary{background:var(--coral); color:#fff;}
+  .btn-secondary{background:var(--card); color:var(--ink-soft);}
+
+  .toast{
+    position:fixed; top:18px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:#fff; padding:11px 20px; border-radius:20px;
+    font-size:13px; font-weight:700; z-index:30; opacity:0; transition:opacity 0.25s; pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+  .loading{text-align:center; padding:50px; color:var(--ink-soft); font-weight:600;}
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" alt="Logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%23FF8F66'/%3E%3Cpath d='M35 38 C35 27 65 27 65 38' stroke='%23FFF6EC' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3Cpath d='M27 38 H73 L67 78 C66.3 82 63 85 59 85 H41 C37 85 33.7 82 33 78 Z' fill='%23FFF6EC'/%3E%3Ccircle cx='50' cy='58' r='9' fill='%23FF8F66'/%3E%3Cpath d='M50 53 L50 63 M45.5 58 L54.5 58' stroke='%23FFF6EC' stroke-width='3.4' stroke-linecap='round'/%3E%3Cg transform='translate(68,20) rotate(35)'%3E%3Crect x='0' y='0' width='16' height='16' rx='4' fill='%236FA97C'/%3E%3Ccircle cx='4' cy='4' r='2' fill='%23E1F0E2'/%3E%3C/g%3E%3C/svg%3E">
+  <div>
+    <h1>Neli's <span class="accent">Angebote</span> & Einkäufe</h1>
+    <div class="sub">Wöchentliche Angebote & Einkaufsliste</div>
+  </div>
+</header>
+
+<div class="main-nav">
+  <button id="navOffers" class="active">🏷️ Angebote</button>
+  <button id="navList">📝 Einkäufe <span class="badge" id="listBadge" style="display:none;">0</span></button>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<main id="main">
+  <div class="loading">Lädt…</div>
+</main>
+
+<button class="fab" id="fabAdd">+ Angebot eintragen</button>
+
+<div class="sheet-overlay" id="sheetOverlay">
+  <div class="sheet">
+    <h3>Angebot eintragen</h3>
+
+    <div class="field">
+      <label>Produkt</label>
+      <input type="text" id="inputName" placeholder="z. B. Nudeln, Erdbeeren…" autocomplete="off">
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+
+    <div class="field">
+      <label>Laden</label>
+      <select id="inputStoreSelect"></select>
+      <input type="text" id="inputStoreCustom" placeholder="Name des Ladens" style="display:none; margin-top:10px;">
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label>Ab wann (optional)</label>
+        <input type="date" id="inputFrom">
+      </div>
+      <div class="field">
+        <label>Preis (optional)</label>
+        <input type="text" inputmode="decimal" id="inputPrice" placeholder="1,99 €">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Menge & Einheit (optional)</label>
+      <div class="row2">
+        <input type="text" inputmode="decimal" id="inputQuantity" placeholder="z. B. 500" style="flex:0 0 40%;">
+        <select id="inputUnitSelect" style="flex:1;"></select>
+      </div>
+      <input type="text" id="inputUnitCustom" placeholder="z. B. Bund, 500g-Packung…" style="display:none; margin-top:10px;">
+    </div>
+
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="cancelBtn">Abbrechen</button>
+      <button class="btn btn-primary" id="saveBtn">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'neli-angebote-state-v4';
+const DEFAULT_STORES = ['Rewe','Aldi','Lidl','Kaufland','Netto','Edeka','Alnatura'];
+const DEFAULT_UNITS = ['Stück','kg','g','Liter','ml','Packung'];
+const OTHER_OPTION = '__other__';
+
+let state = { stores: [], productHistory: [], customUnits: [] };
+let activeStoreId = null;
+let activeView = 'offers';
+let editingItem = null; // { storeId, itemId } wenn im Bearbeiten-Modus
+
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function fmtDate(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}.${m}.`; }
+function daysAgo(iso){ if(!iso) return null; const diff = (Date.now() - new Date(iso).getTime())/86400000; return diff; }
+function isLikelyExpired(item){ const d = daysAgo(item.validFrom); return d!==null && d > 7; }
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ state = JSON.parse(raw); if(!state.productHistory) state.productHistory=[]; if(!state.customUnits) state.customUnits=[]; }
+  }catch(e){ state = { stores: [], productHistory: [], customUnits: [] }; }
+  if(state.stores.length && !activeStoreId){ activeStoreId = state.stores[0].id; }
+  render();
+}
+
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ showToast('Speichern fehlgeschlagen'); }
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+function allItemsFlat(){
+  const out = [];
+  state.stores.forEach(store=>{
+    store.items.forEach(item=>out.push({...item, storeId: store.id, storeName: store.name}));
+  });
+  return out;
+}
+
+function renderNav(){
+  document.getElementById('navOffers').classList.toggle('active', activeView==='offers');
+  document.getElementById('navList').classList.toggle('active', activeView==='list');
+  document.getElementById('tabs').style.display = activeView==='offers' ? 'flex' : 'none';
+  document.getElementById('fabAdd').style.display = activeView==='offers' ? 'block' : 'none';
+
+  const listCount = allItemsFlat().filter(i=>i.onList && !i.checked).length;
+  const badge = document.getElementById('listBadge');
+  if(listCount>0){ badge.style.display='inline-block'; badge.textContent = listCount; }
+  else{ badge.style.display='none'; }
+}
+
+function renderTabs(){
+  const tabs = document.getElementById('tabs');
+  tabs.innerHTML = '';
+  if(state.stores.length > 0){
+    const allTab = document.createElement('div');
+    allTab.className = 'tab' + (activeStoreId==='ALL' ? ' active' : '');
+    allTab.textContent = '📋 Gesamt';
+    allTab.onclick = ()=>{ activeStoreId = 'ALL'; render(); };
+    tabs.appendChild(allTab);
+  }
+  state.stores.forEach(store=>{
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (store.id===activeStoreId ? ' active' : '');
+    tab.textContent = store.name;
+    tab.onclick = ()=>{ activeStoreId = store.id; render(); };
+    tabs.appendChild(tab);
+  });
+}
+
+function itemCardHtml(item, opts){
+  const expired = isLikelyExpired(item);
+  const validText = item.validFrom ? `seit ${fmtDate(item.validFrom)}` : '';
+  return `
+    <div class="item-card ${expired?'expired':''} ${item.checked?'checked':''}" data-item="${item.id}" data-store="${opts.storeId}">
+      ${opts.showCheckbox ? `<div class="checkbox ${item.checked?'checked':''}" data-action="toggle-check">${item.checked?'✓':''}</div>` : ''}
+      <div class="item-main">
+        <div class="item-name">${escapeHtml(item.name)}</div>
+        ${validText ? `<div class="item-valid ${expired?'expired-tag':''}">${expired?'Wahrscheinlich abgelaufen · ':''}${validText}</div>` : ''}
+        ${opts.showStoreTag ? `<div class="item-store-tag">${escapeHtml(opts.storeName)}</div>` : ''}
+      </div>
+      ${(item.price || item.quantity || item.unit) ? `<div class="price-tag">${item.price ? escapeHtml(item.price)+'€' : ''}${(item.quantity||item.unit) ? (item.price ? ' / ' : '') + escapeHtml(item.quantity||'') + (item.quantity&&item.unit?' ':'') + escapeHtml(item.unit||'') : ''}</div>` : ''}
+      ${opts.showEdit ? `<button class="icon-btn" data-action="edit-item" title="Bearbeiten">✏️</button>` : ''}
+      ${opts.showListToggle ? `<button class="icon-btn ${item.onList?'on':''}" data-action="toggle-list" title="Zur Liste">${item.onList?'✓':'+'}</button>` : ''}
+      ${opts.showDelete ? `<button class="del-btn" data-action="delete-item">✕</button>` : ''}
+    </div>
+  `;
+}
+
+function renderOffersView(){
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  if(state.stores.length === 0){
+    main.innerHTML = '<div class="empty"><span class="emoji">🛍️</span>Noch keine Angebote eingetragen.<br>Tippe unten auf „Angebot eintragen“, um zu starten.</div>';
+    return;
+  }
+
+  if(activeStoreId === 'ALL'){
+    const header = document.createElement('div');
+    header.className = 'store-header';
+    header.innerHTML = `<h2>📋 Gesamt</h2>`;
+    main.appendChild(header);
+
+    const allItems = allItemsFlat();
+    if(allItems.length === 0){
+      main.innerHTML += '<div class="empty"><span class="emoji">🏷️</span>Noch keine Angebote eingetragen.</div>';
+      return;
+    }
+    const sortedAll = [...allItems].sort((a,b)=>{
+      const ea = isLikelyExpired(a), eb = isLikelyExpired(b);
+      if(ea !== eb) return ea ? 1 : -1;
+      return (b.validFrom||'').localeCompare(a.validFrom||'');
+    });
+    const wrap = document.createElement('div');
+    wrap.innerHTML = sortedAll.map(item=>itemCardHtml(item, {storeId:item.storeId, showEdit:true, showListToggle:true, showDelete:true, showStoreTag:true})).join('');
+    main.appendChild(wrap);
+    attachCardHandlers(main);
+    return;
+  }
+
+  const store = state.stores.find(s=>s.id===activeStoreId) || state.stores[0];
+  activeStoreId = store.id;
+
+  const header = document.createElement('div');
+  header.className = 'store-header';
+  header.innerHTML = `<h2>${escapeHtml(store.name)}</h2>
+    <button data-action="delete-store">Markt löschen</button>`;
+  header.querySelector('[data-action="delete-store"]').onclick = ()=>deleteStore(store.id);
+  main.appendChild(header);
+
+  if(store.items.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = `<span class="emoji">🏷️</span>Noch keine Angebote für ${escapeHtml(store.name)}.`;
+    main.appendChild(empty);
+    return;
+  }
+
+  const sorted = [...store.items].sort((a,b)=>{
+    const ea = isLikelyExpired(a), eb = isLikelyExpired(b);
+    if(ea !== eb) return ea ? 1 : -1;
+    return (b.validFrom||'').localeCompare(a.validFrom||'');
+  });
+
+  const wrap = document.createElement('div');
+  wrap.innerHTML = sorted.map(item=>itemCardHtml(item, {storeId:store.id, showEdit:true, showListToggle:true, showDelete:true})).join('');
+  main.appendChild(wrap);
+  attachCardHandlers(main);
+}
+
+function renderListView(){
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  const flat = allItemsFlat().filter(i=>i.onList);
+  if(flat.length === 0){
+    main.innerHTML = '<div class="empty"><span class="emoji">📝</span>Die Einkaufsliste ist leer.<br>Geh zu „Angebote“ und tippe auf „+“ bei den Produkten, die gekauft werden sollen.</div>';
+    return;
+  }
+
+  const byStore = {};
+  flat.forEach(item=>{
+    if(!byStore[item.storeName]) byStore[item.storeName] = [];
+    byStore[item.storeName].push(item);
+  });
+
+  const wrap = document.createElement('div');
+  Object.keys(byStore).sort().forEach(storeName=>{
+    const items = byStore[storeName].sort((a,b)=> (a.checked===b.checked)?0:(a.checked?1:-1));
+    wrap.innerHTML += `<div class="list-group-title">${escapeHtml(storeName)}</div>`;
+    wrap.innerHTML += items.map(item=>itemCardHtml(item, {storeId:item.storeId, showCheckbox:true, showEdit:true, showStoreTag:false})).join('');
+  });
+  main.appendChild(wrap);
+
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'fab secondary';
+  clearBtn.textContent = 'Erledigte von der Liste entfernen';
+  clearBtn.onclick = clearCheckedFromList;
+  document.body.appendChild(clearBtn);
+
+  attachCardHandlers(main);
+}
+
+function attachCardHandlers(container){
+  container.querySelectorAll('[data-action="edit-item"]').forEach(btn=>{
+    btn.onclick = (e)=>{ const card = e.target.closest('.item-card'); const item = findItem(card.dataset.store, card.dataset.item); if(item) openSheet(item, card.dataset.store); };
+  });
+  container.querySelectorAll('[data-action="toggle-list"]').forEach(btn=>{
+    btn.onclick = (e)=>{ const card = e.target.closest('.item-card'); toggleOnList(card.dataset.store, card.dataset.item); };
+  });
+  container.querySelectorAll('[data-action="toggle-check"]').forEach(el=>{
+    el.onclick = (e)=>{ const card = e.target.closest('.item-card'); toggleChecked(card.dataset.store, card.dataset.item); };
+  });
+  container.querySelectorAll('[data-action="delete-item"]').forEach(btn=>{
+    btn.onclick = (e)=>{ const card = e.target.closest('.item-card'); deleteItem(card.dataset.store, card.dataset.item); };
+  });
+}
+
+function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+function removeStrayClearBtn(){ document.querySelectorAll('.fab.secondary').forEach(el=>el.remove()); }
+
+function render(){
+  removeStrayClearBtn();
+  renderNav();
+  renderTabs();
+  if(activeView==='offers') renderOffersView();
+  else renderListView();
+}
+
+function deleteStore(storeId){
+  if(!confirm('Diesen Supermarkt inkl. aller Angebote löschen?')) return;
+  state.stores = state.stores.filter(s=>s.id!==storeId);
+  if(activeStoreId===storeId){ activeStoreId = state.stores.length ? state.stores[0].id : null; }
+  saveState();
+  render();
+}
+
+function findItem(storeId, itemId){
+  const store = state.stores.find(s=>s.id===storeId);
+  if(!store) return null;
+  return store.items.find(i=>i.id===itemId);
+}
+
+function deleteItem(storeId, itemId){
+  const store = state.stores.find(s=>s.id===storeId);
+  if(!store) return;
+  store.items = store.items.filter(i=>i.id!==itemId);
+  saveState();
+  render();
+}
+
+function toggleOnList(storeId, itemId){
+  const item = findItem(storeId, itemId);
+  if(!item) return;
+  item.onList = !item.onList;
+  if(!item.onList) item.checked = false;
+  saveState();
+  render();
+}
+
+function toggleChecked(storeId, itemId){
+  const item = findItem(storeId, itemId);
+  if(!item) return;
+  item.checked = !item.checked;
+  saveState();
+  render();
+}
+
+function clearCheckedFromList(){
+  state.stores.forEach(store=>{
+    store.items.forEach(item=>{ if(item.onList && item.checked){ item.onList = false; item.checked = false; } });
+  });
+  saveState();
+  render();
+}
+
+document.getElementById('navOffers').onclick = ()=>{ activeView='offers'; render(); };
+document.getElementById('navList').onclick = ()=>{ activeView='list'; render(); };
+
+// --- Sheet ---
+const overlay = document.getElementById('sheetOverlay');
+const inputName = document.getElementById('inputName');
+const suggestionsBox = document.getElementById('suggestions');
+const inputStoreSelect = document.getElementById('inputStoreSelect');
+const inputStoreCustom = document.getElementById('inputStoreCustom');
+const inputFrom = document.getElementById('inputFrom');
+const inputPrice = document.getElementById('inputPrice');
+const inputQuantity = document.getElementById('inputQuantity');
+const inputUnitSelect = document.getElementById('inputUnitSelect');
+const inputUnitCustom = document.getElementById('inputUnitCustom');
+
+function knownStoreNames(){
+  const names = [...DEFAULT_STORES];
+  state.stores.forEach(s=>{ if(!names.includes(s.name)) names.push(s.name); });
+  return names;
+}
+
+function knownUnitNames(){
+  const names = [...DEFAULT_UNITS];
+  state.customUnits.forEach(u=>{ if(!names.includes(u)) names.push(u); });
+  return names;
+}
+
+function populateStoreSelect(){
+  inputStoreSelect.innerHTML = '';
+  knownStoreNames().forEach(name=>{
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    inputStoreSelect.appendChild(opt);
+  });
+  const otherOpt = document.createElement('option');
+  otherOpt.value = OTHER_OPTION; otherOpt.textContent = '+ Weiterer Laden…';
+  inputStoreSelect.appendChild(otherOpt);
+}
+
+function populateUnitSelect(){
+  inputUnitSelect.innerHTML = '';
+  const blankOpt = document.createElement('option');
+  blankOpt.value = ''; blankOpt.textContent = 'Keine Einheit';
+  inputUnitSelect.appendChild(blankOpt);
+  knownUnitNames().forEach(name=>{
+    const opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    inputUnitSelect.appendChild(opt);
+  });
+  const otherOpt = document.createElement('option');
+  otherOpt.value = OTHER_OPTION; otherOpt.textContent = '+ Weitere Einheit…';
+  inputUnitSelect.appendChild(otherOpt);
+}
+
+inputStoreSelect.onchange = ()=>{
+  inputStoreCustom.style.display = inputStoreSelect.value===OTHER_OPTION ? 'block' : 'none';
+  if(inputStoreSelect.value===OTHER_OPTION) inputStoreCustom.focus();
+};
+
+inputUnitSelect.onchange = ()=>{
+  inputUnitCustom.style.display = inputUnitSelect.value===OTHER_OPTION ? 'block' : 'none';
+  if(inputUnitSelect.value===OTHER_OPTION) inputUnitCustom.focus();
+};
+
+function renderSuggestions(filterText){
+  const q = (filterText||'').trim().toLowerCase();
+  let list = state.productHistory;
+  if(q) list = list.filter(n=>n.toLowerCase().includes(q) && n.toLowerCase()!==q);
+  list = list.slice(0, 8);
+  suggestionsBox.innerHTML = list.map(name=>`<div class="chip" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`).join('');
+  suggestionsBox.querySelectorAll('.chip').forEach(chip=>{
+    chip.onclick = ()=>{ inputName.value = chip.dataset.name; renderSuggestions(inputName.value); };
+  });
+}
+
+inputName.oninput = ()=>renderSuggestions(inputName.value);
+inputName.onfocus = ()=>renderSuggestions(inputName.value);
+
+function addToHistory(name){
+  state.productHistory = state.productHistory.filter(n=>n.toLowerCase()!==name.toLowerCase());
+  state.productHistory.unshift(name);
+  state.productHistory = state.productHistory.slice(0, 40);
+}
+
+function openSheet(existingItem, existingStoreId){
+  editingItem = existingItem ? { storeId: existingStoreId, itemId: existingItem.id } : null;
+  document.querySelector('.sheet h3').textContent = existingItem ? 'Angebot bearbeiten' : 'Angebot eintragen';
+
+  inputName.value = existingItem ? existingItem.name : '';
+  inputPrice.value = existingItem ? (existingItem.price||'') : '';
+  inputQuantity.value = existingItem ? (existingItem.quantity||'') : '';
+  inputFrom.value = existingItem ? (existingItem.validFrom||'') : '';
+
+  populateStoreSelect();
+  const currentStoreName = existingItem
+    ? state.stores.find(s=>s.id===existingStoreId)?.name
+    : state.stores.find(s=>s.id===activeStoreId)?.name;
+  inputStoreSelect.value = currentStoreName || DEFAULT_STORES[0];
+  if(![...inputStoreSelect.options].some(o=>o.value===inputStoreSelect.value)) inputStoreSelect.selectedIndex = 0;
+  inputStoreCustom.style.display='none'; inputStoreCustom.value='';
+
+  populateUnitSelect();
+  inputUnitSelect.value = existingItem ? (existingItem.unit||'') : '';
+  if(![...inputUnitSelect.options].some(o=>o.value===inputUnitSelect.value)) inputUnitSelect.selectedIndex = 0;
+  inputUnitCustom.style.display='none'; inputUnitCustom.value='';
+
+  renderSuggestions('');
+  overlay.classList.add('open');
+}
+function closeSheet(){ overlay.classList.remove('open'); editingItem = null; }
+
+document.getElementById('fabAdd').onclick = ()=>openSheet();
+document.getElementById('cancelBtn').onclick = closeSheet;
+overlay.onclick = (e)=>{ if(e.target===overlay) closeSheet(); };
+
+document.getElementById('saveBtn').onclick = ()=>{
+  const itemName = inputName.value.trim();
+  if(!itemName){ showToast('Bitte Produktnamen eingeben'); return; }
+
+  let storeName = inputStoreSelect.value===OTHER_OPTION ? inputStoreCustom.value.trim() : inputStoreSelect.value;
+  if(!storeName){ showToast('Bitte Laden angeben'); return; }
+
+  let unitName = inputUnitSelect.value===OTHER_OPTION ? inputUnitCustom.value.trim() : inputUnitSelect.value;
+  if(unitName && !knownUnitNames().includes(unitName)){
+    state.customUnits.push(unitName);
+  }
+
+  let store = state.stores.find(s=>s.name.toLowerCase()===storeName.toLowerCase());
+  if(!store){ store = { id: uid(), name: storeName, items: [] }; state.stores.push(store); }
+  activeStoreId = store.id;
+
+  if(editingItem){
+    // Bestehendes Angebot aktualisieren (ggf. Laden gewechselt -> Item verschieben)
+    const oldStore = state.stores.find(s=>s.id===editingItem.storeId);
+    const item = oldStore ? oldStore.items.find(i=>i.id===editingItem.itemId) : null;
+    if(item){
+      item.name = itemName;
+      item.price = inputPrice.value.trim();
+      item.quantity = inputQuantity.value.trim();
+      item.validFrom = inputFrom.value;
+      item.unit = unitName;
+      if(oldStore.id !== store.id){
+        oldStore.items = oldStore.items.filter(i=>i.id!==item.id);
+        store.items.push(item);
+      }
+    }
+  } else {
+    store.items.push({
+      id: uid(), name: itemName,
+      price: inputPrice.value.trim(),
+      quantity: inputQuantity.value.trim(),
+      validFrom: inputFrom.value,
+      unit: unitName,
+      onList: false, checked: false
+    });
+  }
+
+  addToHistory(itemName);
+
+  closeSheet();
+  render();
+  saveState();
+  showToast('Gespeichert ✓');
+};
+
+loadState();
+</script>
+</body>
+</html>
