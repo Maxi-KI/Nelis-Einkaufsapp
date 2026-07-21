@@ -51,11 +51,11 @@
   input, select, textarea{-webkit-user-select:text; user-select:text;}
   h1,h2,.display{font-family:'Baloo 2', sans-serif;}
 
-  header{padding:calc(18px + env(safe-area-inset-top)) 20px 16px; display:flex; align-items:center; gap:12px;}
-  header .logo{width:42px; height:42px; border-radius:13px; flex:0 0 auto; box-shadow:0 4px 10px rgba(255,143,102,0.3);}
+  header{padding:calc(18px + env(safe-area-inset-top)) 20px 16px; display:flex; align-items:center; gap:10px;}
+  header .logo{width:36px; height:36px; border-radius:11px; flex:0 0 auto; box-shadow:0 4px 10px rgba(255,143,102,0.3);}
   header .title-block{min-width:0; flex:1;}
   header h1{
-    font-size:18px; margin:0; line-height:1.25; font-weight:700;
+    font-size:20px; margin:0; line-height:1.25; font-weight:700;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   header .sub{font-size:13px; color:var(--ink-soft); margin-top:3px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -64,21 +64,15 @@
     display:flex; gap:8px;
     padding:0 20px 14px;
   }
-  .backup-reminder{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
+  .backup-reminder-inline{
     background:var(--sage-soft); color:var(--sage);
-    padding:10px 20px; font-size:12.5px; font-weight:700;
-    min-height:1px;
+    padding:10px 12px; border-radius:12px;
+    font-size:13px; font-weight:700; margin:0 0 14px;
   }
-  .backup-reminder button{
-    background:var(--sage); color:#fff; border:none; border-radius:10px;
-    padding:6px 12px; font-size:12px; font-weight:700; flex:0 0 auto;
-  }
-  .backup-reminder .reminder-close{background:none; color:var(--sage); font-size:16px; padding:2px 4px;}
 
   .settings-card{
     background:var(--card); border-radius:var(--radius);
-    padding:18px; margin-bottom:14px; box-shadow:0 3px 10px rgba(58,51,44,0.06);
+    padding:14px 16px; margin-bottom:12px; box-shadow:0 3px 10px rgba(58,51,44,0.06);
   }
   .settings-card h3{font-family:'Baloo 2', sans-serif; font-size:16px; margin:0 0 6px; font-weight:700;}
   .settings-card p{font-size:13px; color:var(--ink-soft); margin:0 0 14px; line-height:1.4;}
@@ -105,22 +99,23 @@
     padding:1px 7px; min-width:18px;
   }
 
-  .tabs{display:flex; overflow-x:auto; gap:8px; padding:0 20px 16px; -webkit-overflow-scrolling:touch;}
+  .tabs{display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:0 20px 16px;}
   .tabs::-webkit-scrollbar{display:none;}
   .tab{
-    flex:0 0 auto; padding:9px 16px;
+    flex:0 0 auto; padding:9px 16px; box-sizing:border-box;
     border-radius:20px; font-weight:700; font-size:13px;
     background:var(--card); color:var(--ink-soft);
+    border:1.5px solid rgba(58,51,44,0.12);
     white-space:nowrap; box-shadow:0 2px 6px rgba(58,51,44,0.05);
     display:inline-flex; align-items:center; justify-content:center; line-height:1;
   }
-  .tab.active{background:var(--ink); color:#fff;}
+  .tab.active{background:var(--ink); color:#fff; border-color:var(--ink);}
 
-  main{padding:0 20px calc(130px + env(safe-area-inset-bottom));}
+  main{padding:2px 20px calc(145px + env(safe-area-inset-bottom));}
   .empty{
     text-align:center; padding:50px 24px;
     color:var(--ink-soft); font-weight:600; font-size:15px;
-    background:var(--card); border-radius:var(--radius); margin-top:4px;
+    background:var(--card); border-radius:var(--radius);
   }
   .empty .emoji{font-size:38px; display:block; margin-bottom:10px;}
 
@@ -131,46 +126,61 @@
   }
   .low-count-hint span{display:block; font-size:26px; margin-bottom:8px;}
 
-  .store-header{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
-  .store-header h2{font-size:21px; margin:0; font-weight:700;}
-  .store-header button{
-    background:none; border:none; font-size:13px; font-weight:700;
-    color:var(--ink-soft); padding:6px 10px; border-radius:10px;
-  }
-  .store-header button:active{background:var(--coral-soft);}
-
   .item-card{
     background:var(--card);
     border-radius:var(--radius);
-    padding:16px;
+    padding:14px 16px;
     margin-bottom:12px;
-    display:flex; align-items:center; gap:12px;
+    display:flex; align-items:center; gap:10px;
     box-shadow:0 3px 10px rgba(58,51,44,0.06);
   }
   .item-card.expired{opacity:0.5;}
+  .item-card.nested{
+    background:none; box-shadow:none; border-radius:0; margin-bottom:0;
+    padding:10px 0; border-top:1px solid rgba(58,51,44,0.08);
+  }
+  .item-card.nested:first-of-type{border-top:none; padding-top:0;}
+  .item-card.nested:last-of-type{padding-bottom:0;}
+
+  .store-block{
+    background:var(--card); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:12px;
+    box-shadow:0 3px 10px rgba(58,51,44,0.06);
+  }
+  .store-block-title{
+    font-family:'Baloo 2', sans-serif; font-weight:700; font-size:15px;
+    display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:2px;
+  }
+  .check-all-btn{
+    background:none; border:none; font-family:'Nunito', sans-serif;
+    font-size:11.5px; font-weight:700; color:var(--sage); padding:4px 6px; flex:0 0 auto;
+  }
+  .check-all-btn:active{opacity:0.6;}
   .item-card.checked .item-name{text-decoration:line-through; opacity:0.55;}
   .item-main{flex:1; min-width:0;}
-  .item-name{font-weight:700; font-size:16px;}
-  .item-valid{font-size:12px; font-weight:700; color:var(--sage); margin-top:4px;}
+  .item-name{font-weight:700; font-size:15px;}
+  .item-valid{font-size:11px; font-weight:700; color:var(--sage); margin-top:3px;}
   .item-valid.expired-tag{color:var(--coral);}
-  .item-store-tag{font-size:12px; font-weight:700; color:var(--ink-soft); margin-top:4px;}
-  .item-brand-tag{font-size:12px; font-weight:700; color:var(--coral); margin-top:3px; font-style:italic;}
+  .item-store-tag{font-size:11px; font-weight:700; color:var(--ink-soft); margin-top:3px;}
+  .item-brand-tag{font-size:11px; font-weight:700; color:var(--coral); margin-top:2px; font-style:italic;}
 
   .price-tag{
     font-family:'Baloo 2', sans-serif; font-weight:700;
     background:var(--coral-soft); color:var(--coral);
-    padding:6px 12px; border-radius:12px; font-size:16px; white-space:nowrap;
+    padding:5px 10px; border-radius:11px; font-size:14px; white-space:nowrap;
+    flex:0 0 auto;
   }
+  .price-tag.cheapest{background:var(--sage-soft); color:var(--sage);}
 
   .icon-btn{
-    background:var(--sage-soft); border:none; width:38px; height:38px;
-    border-radius:12px; font-size:18px; color:var(--sage); font-weight:800;
+    background:var(--sage-soft); border:none; width:34px; height:34px;
+    border-radius:11px; font-size:16px; color:var(--sage); font-weight:800;
     flex:0 0 auto; display:flex; align-items:center; justify-content:center;
   }
   .icon-btn.on{background:var(--sage); color:#fff;}
-  .del-btn{background:none; border:none; font-size:18px; color:var(--ink-soft); opacity:0.6; padding:4px 6px; flex:0 0 auto;}
+  .del-btn{background:none; border:none; font-size:16px; color:var(--ink-soft); opacity:0.6; padding:4px 5px; flex:0 0 auto;}
   .checkbox{
-    width:28px; height:28px; border-radius:9px; border:2px solid var(--sage);
+    width:26px; height:26px; border-radius:8px; border:2px solid var(--sage);
     flex:0 0 auto; display:flex; align-items:center; justify-content:center;
     font-weight:800; background:#fff; color:var(--sage);
   }
@@ -182,11 +192,6 @@
   }
   .group-title:first-of-type{margin-top:4px;}
   .group-count{font-size:12px; font-weight:700; color:var(--ink-soft); font-family:'Nunito', sans-serif;}
-  .cheapest-badge{
-    flex:0 0 auto; display:inline-flex; align-items:center;
-    background:var(--sage-soft); color:var(--sage); font-size:11px; font-weight:800;
-    border-radius:10px; padding:5px 9px; white-space:nowrap;
-  }
 
   .fab{
     position:fixed; bottom:calc(22px + env(safe-area-inset-bottom)); right:20px; left:20px;
@@ -198,7 +203,7 @@
   .fab:active{transform:scale(0.98);}
   .fab.secondary{
     background:var(--card); color:var(--ink);
-    box-shadow:0 4px 12px rgba(58,51,44,0.1); bottom:calc(84px + env(safe-area-inset-bottom));
+    box-shadow:0 4px 12px rgba(58,51,44,0.1); bottom:calc(96px + env(safe-area-inset-bottom));
   }
 
   .sheet-overlay{position:fixed; inset:0; background:rgba(58,51,44,0.4); display:none; z-index:20; align-items:flex-end;}
@@ -241,11 +246,22 @@
   .ref-chip:active{background:var(--sage); color:#fff;}
   .duration-chips{display:flex; gap:7px; margin:-8px 0 16px;}
   .duration-chips .chip{font-size:12px; padding:6px 12px;}
+  .duplicate-warning{
+    background:var(--coral-soft); color:var(--coral);
+    border-radius:12px; padding:10px 12px; margin-top:10px;
+    font-size:12.5px; font-weight:700; line-height:1.4;
+  }
+  .duplicate-warning button{
+    display:block; background:var(--coral); color:#fff; border:none;
+    border-radius:10px; padding:6px 12px; font-size:12px; font-weight:700;
+    margin-top:8px;
+  }
 
   .sheet-actions{display:flex; gap:10px; margin-top:20px;}
   .btn{flex:1; padding:14px; border:none; border-radius:14px; font-family:'Baloo 2', sans-serif; font-size:15px; font-weight:700;}
   .btn-primary{background:var(--coral); color:#fff;}
   .btn-secondary{background:var(--card); color:var(--ink-soft);}
+  .management-btn{width:100%; margin-top:22px; box-shadow:0 2px 8px rgba(58,51,44,0.05);}
 
   .toast{
     position:fixed; top:18px; left:50%; transform:translateX(-50%);
@@ -285,7 +301,7 @@
 
 <div class="sheet-overlay" id="sheetOverlay">
   <div class="sheet">
-    <h3>Angebot eintragen</h3>
+    <h3 id="sheetTitle">Angebot eintragen</h3>
 
     <div class="field">
       <label>Produkt</label>
@@ -304,6 +320,7 @@
       <label>Laden</label>
       <select id="inputStoreSelect"></select>
       <input type="text" id="inputStoreCustom" placeholder="Name des Ladens" style="display:none; margin-top:10px;">
+      <div id="duplicateWarning"></div>
     </div>
 
     <div class="row2">
@@ -357,7 +374,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'V1.5.1';
+const APP_VERSION = 'V2.3';
 const STORAGE_KEY = 'neli-angebote-state-v4';
 const DEFAULT_STORES = ['Rewe','Aldi','Lidl','Kaufland','Netto','Edeka','Alnatura'];
 const DEFAULT_UNITS = ['Stück','kg','g','Liter','ml','Packung'];
@@ -367,6 +384,7 @@ let state = { stores: [], productHistory: [], customUnits: [], archive: [] };
 let activeStoreId = null;
 let activeView = 'offers';
 let gesamtSearchQuery = '';
+let storeSearchQuery = '';
 let archiveSearchQuery = '';
 let editingItem = null; // { storeId, itemId } wenn im Bearbeiten-Modus
 
@@ -402,10 +420,40 @@ function customConfirm(message){
   });
 }
 
+function appendManagementButton(main, label, onClick){
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-secondary management-btn';
+  btn.textContent = label;
+  btn.onclick = onClick;
+  main.appendChild(btn);
+}
+
 function uid(){ return Math.random().toString(36).slice(2,10); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function fmtDate(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}.${m}.`; }
 function daysAgo(iso){ if(!iso) return null; const diff = (Date.now() - new Date(iso).getTime())/86400000; return diff; }
+const MASS_TO_GRAMS = {g:1, kg:1000};
+const VOLUME_TO_ML = {ml:1, Liter:1000};
+
+// Rechnet Preis auf eine vergleichbare Basis um (€/kg, €/Liter, oder €/Stück-Einheit),
+// damit z.B. "500g für 2€" fair gegen "1kg für 3,50€" verglichen wird statt nur den nackten Preis zu nehmen.
+function getNormalizedPrice(item){
+  const price = parseFloat((item.price||'').replace(',','.'));
+  if(isNaN(price)) return null;
+  const qty = parseFloat((item.quantity||'').replace(',','.'));
+  const unit = item.unit || '';
+  if(qty && MASS_TO_GRAMS[unit]){
+    return { value: price / (qty * MASS_TO_GRAMS[unit]) * 1000, basis:'kg' };
+  }
+  if(qty && VOLUME_TO_ML[unit]){
+    return { value: price / (qty * VOLUME_TO_ML[unit]) * 1000, basis:'liter' };
+  }
+  if(qty){
+    return { value: price / qty, basis: unit || 'stück' };
+  }
+  return { value: price, basis:'raw' };
+}
+
 function isLikelyExpired(item){
   if(item.validTo) return item.validTo < todayISO();
   const d = daysAgo(item.validFrom);
@@ -467,7 +515,7 @@ function renderTabs(){
   if(state.stores.length > 0){
     const allTab = document.createElement('div');
     allTab.className = 'tab' + (activeStoreId==='ALL' ? ' active' : '');
-    allTab.textContent = '📋 Gesamt';
+    allTab.textContent = 'Gesamt';
     allTab.onclick = ()=>{ activeStoreId = 'ALL'; render(); };
     tabs.appendChild(allTab);
   }
@@ -487,7 +535,7 @@ function itemCardHtml(item, opts){
     : item.validFrom ? `seit ${fmtDate(item.validFrom)}`
     : '';
   return `
-    <div class="item-card ${expired?'expired':''} ${item.checked?'checked':''}" data-item="${item.id}" data-store="${opts.storeId}">
+    <div class="item-card ${opts.nested?'nested':''} ${expired?'expired':''} ${item.checked?'checked':''}" data-item="${item.id}" data-store="${opts.storeId}">
       ${opts.showCheckbox ? `<div class="checkbox ${item.checked?'checked':''}" data-action="toggle-check">${item.checked?'✓':''}</div>` : ''}
       <div class="item-main">
         ${opts.hideName ? '' : `<div class="item-name">${escapeHtml(item.name)}</div>`}
@@ -495,8 +543,7 @@ function itemCardHtml(item, opts){
         ${validText ? `<div class="item-valid ${expired?'expired-tag':''}">${expired?'Wahrscheinlich abgelaufen · ':''}${validText}</div>` : ''}
         ${opts.showStoreTag ? `<div class="item-store-tag">${escapeHtml(opts.storeName)}</div>` : ''}
       </div>
-      ${opts.badge ? `<span class="cheapest-badge">${opts.badge}</span>` : ''}
-      ${(item.price || item.quantity || item.unit) ? `<div class="price-tag">${item.price ? escapeHtml(item.price)+'€' : ''}${(item.quantity||item.unit) ? (item.price ? ' / ' : '') + escapeHtml(item.quantity||'') + (item.quantity&&item.unit?' ':'') + escapeHtml(item.unit||'') : ''}</div>` : ''}
+      ${(item.price || item.quantity || item.unit) ? `<div class="price-tag${opts.badge?' cheapest':''}">${opts.badge?'✓ ':''}${item.price ? escapeHtml(item.price)+'€' : ''}${(item.quantity||item.unit) ? (item.price ? ' / ' : '') + escapeHtml(item.quantity||'') + (item.quantity&&item.unit?' ':'') + escapeHtml(item.unit||'') : ''}</div>` : ''}
       ${opts.showEdit ? `<button class="icon-btn" data-action="edit-item" title="Bearbeiten">✏️</button>` : ''}
       ${opts.showListToggle ? `<button class="icon-btn ${item.onList?'on':''}" data-action="toggle-list" title="Zur Liste">${item.onList?'✓':'+'}</button>` : ''}
       ${opts.showDelete ? `<button class="del-btn" data-action="delete-item">✕</button>` : ''}
@@ -514,10 +561,6 @@ function renderOffersView(){
   main.innerHTML = '';
 
   if(state.stores.length === 0){
-    const header = document.createElement('div');
-    header.className = 'store-header';
-    header.innerHTML = `<h2>🏷️ Angebote</h2>`;
-    main.appendChild(header);
     const empty = document.createElement('div');
     empty.className = 'empty';
     empty.innerHTML = '<span class="emoji">🛍️</span>Noch keine Angebote eingetragen.<br>Tippe unten auf „Angebot eintragen“, um zu starten.';
@@ -526,12 +569,6 @@ function renderOffersView(){
   }
 
   if(activeStoreId === 'ALL'){
-    const header = document.createElement('div');
-    header.className = 'store-header';
-    header.innerHTML = `<h2>📋 Gesamt</h2><button data-action="close-week">Abgelaufene archivieren</button>`;
-    header.querySelector('[data-action="close-week"]').onclick = closeWeek;
-    main.appendChild(header);
-
     const allItems = allItemsFlat();
     if(allItems.length === 0){
       const emptyDiv = document.createElement('div');
@@ -560,6 +597,7 @@ function renderOffersView(){
       emptyDiv.className = 'empty';
       emptyDiv.innerHTML = '<span class="emoji">🔍</span>Keine Angebote gefunden.';
       main.appendChild(emptyDiv);
+      appendManagementButton(main, '🗄️ Abgelaufene archivieren', closeWeek);
       return;
     }
 
@@ -587,8 +625,13 @@ function renderOffersView(){
         wrap.innerHTML += itemCardHtml(groupItems[0], {storeId:groupItems[0].storeId, showEdit:true, showListToggle:true, showDelete:true, showStoreTag:true, storeName:groupItems[0].storeName});
       } else {
         // Mehrfach-Angebot: gleicher Name in mehreren Läden -> günstigsten Preis markieren
-        const withNumericPrice = groupItems.map(i=>({item:i, num: parseFloat((i.price||'').replace(',','.'))})).filter(x=>!isNaN(x.num));
-        const cheapestId = withNumericPrice.length ? withNumericPrice.reduce((a,b)=>a.num<=b.num?a:b).item.id : null;
+        // Fairer Vergleich: nur Angebote mit derselben Vergleichsbasis (z.B. alle €/kg) gegeneinander antreten lassen
+        const normed = groupItems.map(i=>({item:i, n:getNormalizedPrice(i)})).filter(x=>x.n);
+        const basisCounts = {};
+        normed.forEach(x=>{ basisCounts[x.n.basis] = (basisCounts[x.n.basis]||0)+1; });
+        const majorityBasis = Object.keys(basisCounts).sort((a,b)=>basisCounts[b]-basisCounts[a])[0];
+        const comparable = normed.filter(x=>x.n.basis===majorityBasis);
+        const cheapestId = comparable.length>=2 ? comparable.reduce((a,b)=>a.n.value<=b.n.value?a:b).item.id : null;
         wrap.innerHTML += `<div class="group-title">${escapeHtml(groupItems[0].name)} <span class="group-count">${groupItems.length}× im Angebot</span></div>`;
         groupItems.forEach(item=>{
           wrap.innerHTML += itemCardHtml(item, {
@@ -601,6 +644,7 @@ function renderOffersView(){
     });
     wrap.innerHTML += lowCountHintHtml(filtered.length);
     main.appendChild(wrap);
+    appendManagementButton(main, '🗄️ Abgelaufene archivieren', closeWeek);
     attachCardHandlers(main);
     return;
   }
@@ -608,22 +652,39 @@ function renderOffersView(){
   const store = state.stores.find(s=>s.id===activeStoreId) || state.stores[0];
   activeStoreId = store.id;
 
-  const header = document.createElement('div');
-  header.className = 'store-header';
-  header.innerHTML = `<h2>${escapeHtml(store.name)}</h2>
-    <button data-action="delete-store">Markt löschen</button>`;
-  header.querySelector('[data-action="delete-store"]').onclick = ()=>deleteStore(store.id);
-  main.appendChild(header);
-
   if(store.items.length === 0){
     const empty = document.createElement('div');
     empty.className = 'empty';
     empty.innerHTML = `<span class="emoji">🏷️</span>Noch keine Angebote für ${escapeHtml(store.name)}.`;
     main.appendChild(empty);
+    appendManagementButton(main, '🗑️ Markt löschen', ()=>deleteStore(store.id));
     return;
   }
 
-  const sorted = [...store.items].sort((a,b)=>{
+  const searchBox = document.createElement('div');
+  searchBox.className = 'field';
+  searchBox.innerHTML = `<input type="text" id="storeSearch" placeholder="🔍 Produkt oder Marke suchen…" value="${escapeAttr(storeSearchQuery)}">`;
+  main.appendChild(searchBox);
+  searchBox.querySelector('input').oninput = (e)=>{
+    storeSearchQuery = e.target.value;
+    renderOffersView();
+    const freshInput = document.getElementById('storeSearch');
+    if(freshInput){ freshInput.focus(); freshInput.setSelectionRange(freshInput.value.length, freshInput.value.length); }
+  };
+
+  const q = storeSearchQuery.trim().toLowerCase();
+  const filteredItems = q ? store.items.filter(i=>i.name.toLowerCase().includes(q) || (i.brand||'').toLowerCase().includes(q)) : store.items;
+
+  if(filteredItems.length === 0){
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'empty';
+    emptyDiv.innerHTML = '<span class="emoji">🔍</span>Keine Angebote gefunden.';
+    main.appendChild(emptyDiv);
+    appendManagementButton(main, '🗑️ Markt löschen', ()=>deleteStore(store.id));
+    return;
+  }
+
+  const sorted = [...filteredItems].sort((a,b)=>{
     const ea = isLikelyExpired(a), eb = isLikelyExpired(b);
     if(ea !== eb) return ea ? 1 : -1;
     return (b.validFrom||'').localeCompare(a.validFrom||'');
@@ -633,17 +694,13 @@ function renderOffersView(){
   wrap.innerHTML = sorted.map(item=>itemCardHtml(item, {storeId:store.id, showEdit:true, showListToggle:true, showDelete:true})).join('');
   wrap.innerHTML += lowCountHintHtml(sorted.length);
   main.appendChild(wrap);
+  appendManagementButton(main, '🗑️ Markt löschen', ()=>deleteStore(store.id));
   attachCardHandlers(main);
 }
 
 function renderListView(){
   const main = document.getElementById('main');
   main.innerHTML = '';
-
-  const header = document.createElement('div');
-  header.className = 'store-header';
-  header.innerHTML = `<h2>📝 Einkäufe</h2>`;
-  main.appendChild(header);
 
   const flat = allItemsFlat().filter(i=>i.onList);
   if(flat.length === 0){
@@ -663,16 +720,35 @@ function renderListView(){
   const wrap = document.createElement('div');
   Object.keys(byStore).sort().forEach(storeName=>{
     const items = byStore[storeName].sort((a,b)=> (a.checked===b.checked)?0:(a.checked?1:-1));
-    wrap.innerHTML += `<div class="group-title">${escapeHtml(storeName)} <span class="group-count">${items.length}×</span></div>`;
-    wrap.innerHTML += items.map(item=>itemCardHtml(item, {storeId:item.storeId, showCheckbox:true, showEdit:true, showStoreTag:false})).join('');
+    const rows = items.map(item=>itemCardHtml(item, {storeId:item.storeId, showCheckbox:true, showEdit:true, showStoreTag:false, nested:true})).join('');
+    const allChecked = items.every(i=>i.checked);
+    wrap.innerHTML += `
+      <div class="store-block">
+        <div class="store-block-title">
+          <span>${escapeHtml(storeName)} <span class="group-count">${items.length}×</span></span>
+          <button class="check-all-btn" data-check-all-store="${escapeAttr(storeName)}">${allChecked ? '↺ Zurücksetzen' : '✓ Alle abhaken'}</button>
+        </div>
+        ${rows}
+      </div>
+    `;
   });
   main.appendChild(wrap);
+
+  wrap.querySelectorAll('[data-check-all-store]').forEach(btn=>{
+    btn.onclick = ()=>checkAllInStore(btn.dataset.checkAllStore);
+  });
 
   const clearBtn = document.createElement('button');
   clearBtn.className = 'fab secondary';
   clearBtn.textContent = 'Erledigte von der Liste entfernen';
   clearBtn.onclick = clearCheckedFromList;
   document.body.appendChild(clearBtn);
+
+  const exportBtn = document.createElement('button');
+  exportBtn.className = 'fab export-fab';
+  exportBtn.textContent = '📝 Larsi eine Einkaufsliste schreiben';
+  exportBtn.onclick = exportListForLarsi;
+  document.body.appendChild(exportBtn);
 
   attachCardHandlers(main);
 }
@@ -699,14 +775,9 @@ function renderArchiveView(){
   const main = document.getElementById('main');
   main.innerHTML = '';
 
-  const header = document.createElement('div');
-  header.className = 'store-header';
-  header.innerHTML = `<h2>🗄️ Archiv</h2>${(state.archive||[]).length ? `<button data-action="clear-archive">Archiv leeren</button>` : ''}`;
-  const clearBtn = header.querySelector('[data-action="clear-archive"]');
-  if(clearBtn) clearBtn.onclick = clearArchive;
-  main.appendChild(header);
+  const hasArchive = (state.archive||[]).length > 0;
 
-  if(!state.archive || state.archive.length === 0){
+  if(!hasArchive){
     const empty = document.createElement('div');
     empty.className = 'empty';
     empty.innerHTML = '<span class="emoji">🗄️</span>Noch nichts archiviert.<br>Abgelaufene Angebote landen hier, sobald du sie in der Gesamt-Ansicht archivierst.';
@@ -733,6 +804,7 @@ function renderArchiveView(){
     emptyDiv.className = 'empty';
     emptyDiv.innerHTML = '<span class="emoji">🔍</span>Keine Archiveinträge gefunden.';
     main.appendChild(emptyDiv);
+    appendManagementButton(main, '🗑️ Archiv leeren', clearArchive);
     return;
   }
 
@@ -757,6 +829,7 @@ function renderArchiveView(){
     recs.forEach(rec=>{ wrap.innerHTML += archiveEntryHtml(rec); });
   });
   main.appendChild(wrap);
+  appendManagementButton(main, '🗑️ Archiv leeren', clearArchive);
 
   wrap.querySelectorAll('[data-action="delete-archive"]').forEach(btn=>{
     btn.onclick = (e)=>{
@@ -796,7 +869,7 @@ function attachCardHandlers(container){
 
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
 function escapeAttr(str){ return escapeHtml(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
-function removeStrayClearBtn(){ document.querySelectorAll('.fab.secondary').forEach(el=>el.remove()); }
+function removeStrayClearBtn(){ document.querySelectorAll('.fab.secondary, .export-fab').forEach(el=>el.remove()); }
 
 function render(){
   removeStrayClearBtn();
@@ -854,6 +927,60 @@ function toggleChecked(storeId, itemId){
   const item = findItem(storeId, itemId);
   if(!item) return;
   item.checked = !item.checked;
+  saveState();
+  render();
+}
+
+async function exportListForLarsi(){
+  const flat = allItemsFlat().filter(i=>i.onList);
+  if(flat.length === 0){ showToast('Einkaufsliste ist leer'); return; }
+
+  const byStore = {};
+  flat.forEach(item=>{
+    if(!byStore[item.storeName]) byStore[item.storeName] = [];
+    byStore[item.storeName].push(item);
+  });
+
+  let text = '🛒 Einkaufsliste\n\n';
+  Object.keys(byStore).sort().forEach(storeName=>{
+    text += `📍 ${storeName.toUpperCase()}\n`;
+    byStore[storeName].forEach(item=>{
+      let line = `☐ ${item.name}`;
+      if(item.brand) line += ` (${item.brand})`;
+      const details = [];
+      if(item.price) details.push(item.price+'€');
+      const qtyUnit = [item.quantity, item.unit].filter(Boolean).join(' ');
+      if(qtyUnit) details.push(qtyUnit);
+      if(details.length) line += ` – ${details.join(' / ')}`;
+      text += line + '\n';
+    });
+    text += '\n';
+  });
+
+  if(navigator.share){
+    try{
+      await navigator.share({ title: 'Einkaufsliste', text: text });
+      return;
+    }catch(e){
+      if(e.name === 'AbortError') return; // Nutzer hat abgebrochen, kein Fehler
+    }
+  }
+
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast('In Zwischenablage kopiert — in Notizen einfügen');
+  }catch(e){
+    showToast('Teilen auf diesem Gerät nicht möglich');
+  }
+}
+
+function checkAllInStore(storeName){
+  const flat = allItemsFlat().filter(i=>i.onList && i.storeName===storeName);
+  const allChecked = flat.length>0 && flat.every(i=>i.checked);
+  flat.forEach(flatItem=>{
+    const item = findItem(flatItem.storeId, flatItem.id);
+    if(item) item.checked = !allChecked;
+  });
   saveState();
   render();
 }
@@ -952,6 +1079,21 @@ function renderPriceReference(name){
   });
 }
 
+function renderDuplicateWarning(){
+  const box = document.getElementById('duplicateWarning');
+  const name = inputName.value.trim().toLowerCase();
+  const storeName = (inputStoreSelect.value===OTHER_OPTION ? inputStoreCustom.value.trim() : inputStoreSelect.value).toLowerCase();
+  if(!name || !storeName){ box.innerHTML=''; return; }
+
+  const store = state.stores.find(s=>s.name.toLowerCase()===storeName);
+  const existing = store ? store.items.find(i=>i.name.trim().toLowerCase()===name && !(editingItem && editingItem.storeId===store.id && editingItem.itemId===i.id)) : null;
+
+  if(!existing){ box.innerHTML=''; return; }
+
+  box.innerHTML = `<div class="duplicate-warning">⚠️ "${escapeHtml(existing.name)}" gibt es bei ${escapeHtml(store.name)} schon.<button type="button" id="editExistingBtn">Bestehendes bearbeiten</button></div>`;
+  document.getElementById('editExistingBtn').onclick = ()=>{ closeSheet(); openSheet(existing, store.id); };
+}
+
 function knownStoreNames(){
   const names = [...DEFAULT_STORES];
   state.stores.forEach(s=>{ if(!names.includes(s.name)) names.push(s.name); });
@@ -994,6 +1136,7 @@ function populateUnitSelect(){
 inputStoreSelect.onchange = ()=>{
   inputStoreCustom.style.display = inputStoreSelect.value===OTHER_OPTION ? 'block' : 'none';
   if(inputStoreSelect.value===OTHER_OPTION) inputStoreCustom.focus();
+  renderDuplicateWarning();
 };
 
 inputUnitSelect.onchange = ()=>{
@@ -1033,8 +1176,9 @@ function renderBrandSuggestions(name){
   });
 }
 
-inputName.oninput = ()=>{ renderSuggestions(inputName.value); renderPriceReference(inputName.value); renderBrandSuggestions(inputName.value); };
-inputName.onfocus = ()=>{ renderSuggestions(inputName.value); renderPriceReference(inputName.value); renderBrandSuggestions(inputName.value); };
+inputName.oninput = ()=>{ renderSuggestions(inputName.value); renderPriceReference(inputName.value); renderBrandSuggestions(inputName.value); renderDuplicateWarning(); };
+inputName.onfocus = ()=>{ renderSuggestions(inputName.value); renderPriceReference(inputName.value); renderBrandSuggestions(inputName.value); renderDuplicateWarning(); };
+inputStoreCustom.oninput = renderDuplicateWarning;
 
 function addToHistory(name){
   state.productHistory = state.productHistory.filter(n=>n.toLowerCase()!==name.toLowerCase());
@@ -1044,7 +1188,7 @@ function addToHistory(name){
 
 function openSheet(existingItem, existingStoreId){
   editingItem = existingItem ? { storeId: existingStoreId, itemId: existingItem.id } : null;
-  document.querySelector('.sheet h3').textContent = existingItem ? 'Angebot bearbeiten' : 'Angebot eintragen';
+  document.getElementById('sheetTitle').textContent = existingItem ? 'Angebot bearbeiten' : 'Angebot eintragen';
 
   inputName.value = existingItem ? existingItem.name : '';
   inputPrice.value = existingItem ? (existingItem.price||'') : '';
@@ -1068,6 +1212,7 @@ function openSheet(existingItem, existingStoreId){
 
   renderSuggestions('');
   renderPriceReference(existingItem ? existingItem.name : '');
+  renderDuplicateWarning();
   renderBrandSuggestions(existingItem ? existingItem.name : '');
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1169,29 +1314,15 @@ function renderSettingsView(){
   const main = document.getElementById('main');
   main.innerHTML = '';
 
-  const header = document.createElement('div');
-  header.className = 'store-header';
-  header.innerHTML = `<h2>⚙️ Mehr</h2>`;
-  main.appendChild(header);
-
   const hasData = state.stores.length > 0 || (state.archive && state.archive.length > 0);
-  if(hasData && daysSinceLastBackup() >= 7){
-    const reminder = document.createElement('div');
-    reminder.className = 'backup-reminder';
-    reminder.style.marginBottom = '14px';
-    reminder.style.borderRadius = 'var(--radius)';
-    reminder.innerHTML = `<span>📅 Seit über einer Woche kein Backup – jetzt sichern?</span><button id="reminderGoBtn">Sichern</button>`;
-    main.appendChild(reminder);
-    document.getElementById('reminderGoBtn').onclick = ()=>{
-      document.getElementById('backupExportBtn')?.scrollIntoView({behavior:'smooth', block:'center'});
-    };
-  }
+  const showReminder = hasData && daysSinceLastBackup() >= 7;
 
   const card = document.createElement('div');
   card.className = 'settings-card';
   card.innerHTML = `
     <h3>💾 Backup</h3>
     <p>Alle Angebote, die Einkaufsliste und das Archiv als Datei sichern oder aus einer Sicherung wiederherstellen. Die Daten liegen sonst nur auf diesem Gerät.</p>
+    ${showReminder ? `<p class="backup-reminder-inline">📅 Seit über einer Woche kein Backup – jetzt sichern?</p>` : ''}
     <button class="btn btn-primary" id="backupExportBtn">⬇️ Backup herunterladen</button>
     <button class="btn btn-secondary" id="backupImportBtn">⬆️ Backup wiederherstellen</button>
     <input type="file" id="backupFileInput" accept="application/json" style="display:none;">
