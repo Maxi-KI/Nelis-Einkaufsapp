@@ -65,9 +65,10 @@
     padding:0 20px 14px;
   }
   .backup-reminder{
-    display:none; align-items:center; justify-content:space-between; gap:8px;
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
     background:var(--sage-soft); color:var(--sage);
     padding:10px 20px; font-size:12.5px; font-weight:700;
+    min-height:1px;
   }
   .backup-reminder button{
     background:var(--sage); color:#fff; border:none; border-radius:10px;
@@ -269,8 +270,6 @@
 
 <div class="tabs" id="tabs"></div>
 
-<div class="backup-reminder" id="backupReminder"></div>
-
 <div id="scrollWrap">
 <main id="main">
   <div class="loading">Lädt…</div>
@@ -331,7 +330,19 @@
 
 <div class="toast" id="toast"></div>
 
+<div class="sheet-overlay" id="confirmOverlay">
+  <div class="sheet">
+    <h3 id="confirmTitle">Bist du sicher?</h3>
+    <p id="confirmMessage" style="color:var(--ink-soft); font-size:14px; line-height:1.5; margin:0 0 20px;"></p>
+    <div class="sheet-actions">
+      <button class="btn btn-secondary" id="confirmCancelBtn">Abbrechen</button>
+      <button class="btn btn-primary" id="confirmOkBtn">Bestätigen</button>
+    </div>
+  </div>
+</div>
+
 <script>
+const APP_VERSION = 'V1.3';
 const STORAGE_KEY = 'neli-angebote-state-v4';
 const DEFAULT_STORES = ['Rewe','Aldi','Lidl','Kaufland','Netto','Edeka','Alnatura'];
 const DEFAULT_UNITS = ['Stück','kg','g','Liter','ml','Packung'];
@@ -356,17 +367,24 @@ function markBackedUpNow(){
   try{ localStorage.setItem(LAST_BACKUP_KEY, new Date().toISOString()); }catch(e){}
 }
 
-function maybeShowBackupReminder(){
-  const el = document.getElementById('backupReminder');
-  const hasData = state.stores.length > 0 || (state.archive && state.archive.length > 0);
-  if(!hasData || daysSinceLastBackup() < 7){
-    el.style.display = 'none';
-    return;
-  }
-  el.innerHTML = `<span>📅 Seit über einer Woche kein Backup – jetzt sichern?</span><button id="reminderGoBtn">Sichern</button><button class="reminder-close" id="reminderCloseBtn">✕</button>`;
-  el.style.display = 'flex';
-  document.getElementById('reminderGoBtn').onclick = ()=>{ activeView='settings'; render(); el.style.display='none'; };
-  document.getElementById('reminderCloseBtn').onclick = ()=>{ el.style.display='none'; };
+function customConfirm(message){
+  return new Promise(resolve=>{
+    const overlay = document.getElementById('confirmOverlay');
+    document.getElementById('confirmMessage').textContent = message;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+    const cleanup = (result)=>{
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      okBtn.onclick = null; cancelBtn.onclick = null; overlay.onclick = null;
+      resolve(result);
+    };
+    okBtn.onclick = ()=>cleanup(true);
+    cancelBtn.onclick = ()=>cleanup(false);
+    overlay.onclick = (e)=>{ if(e.target===overlay) cleanup(false); };
+  });
 }
 
 function uid(){ return Math.random().toString(36).slice(2,10); }
@@ -473,7 +491,14 @@ function renderOffersView(){
   main.innerHTML = '';
 
   if(state.stores.length === 0){
-    main.innerHTML = '<div class="empty"><span class="emoji">🛍️</span>Noch keine Angebote eingetragen.<br>Tippe unten auf „Angebot eintragen“, um zu starten.</div>';
+    const header = document.createElement('div');
+    header.className = 'store-header';
+    header.innerHTML = `<h2>🏷️ Angebote</h2>`;
+    main.appendChild(header);
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = '<span class="emoji">🛍️</span>Noch keine Angebote eingetragen.<br>Tippe unten auf „Angebot eintragen“, um zu starten.';
+    main.appendChild(empty);
     return;
   }
 
@@ -495,7 +520,7 @@ function renderOffersView(){
 
     const searchBox = document.createElement('div');
     searchBox.className = 'field';
-    searchBox.innerHTML = `<input type="text" id="gesamtSearch" placeholder="🔍 Angebote durchsuchen…" value="${escapeHtml(gesamtSearchQuery)}">`;
+    searchBox.innerHTML = `<input type="text" id="gesamtSearch" placeholder="🔍 Angebote durchsuchen…" value="${escapeAttr(gesamtSearchQuery)}">`;
     main.appendChild(searchBox);
     searchBox.querySelector('input').oninput = (e)=>{
       gesamtSearchQuery = e.target.value;
@@ -665,7 +690,7 @@ function renderArchiveView(){
 
   const searchBox = document.createElement('div');
   searchBox.className = 'field';
-  searchBox.innerHTML = `<input type="text" id="archiveSearch" placeholder="🔍 Archiv durchsuchen…" value="${escapeHtml(archiveSearchQuery)}">`;
+  searchBox.innerHTML = `<input type="text" id="archiveSearch" placeholder="🔍 Archiv durchsuchen…" value="${escapeAttr(archiveSearchQuery)}">`;
   main.appendChild(searchBox);
   searchBox.querySelector('input').oninput = (e)=>{
     archiveSearchQuery = e.target.value;
@@ -721,8 +746,8 @@ function deleteArchiveEntry(id){
   render();
 }
 
-function clearArchive(){
-  if(!confirm('Wirklich das komplette Archiv löschen? Das entfernt alle alten Preis-Referenzen unwiderruflich.')) return;
+async function clearArchive(){
+  if(!await customConfirm('Wirklich das komplette Archiv löschen? Das entfernt alle alten Preis-Referenzen unwiderruflich.')) return;
   state.archive = [];
   saveState();
   render();
@@ -744,6 +769,7 @@ function attachCardHandlers(container){
 }
 
 function escapeHtml(str){ const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+function escapeAttr(str){ return escapeHtml(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 function removeStrayClearBtn(){ document.querySelectorAll('.fab.secondary').forEach(el=>el.remove()); }
 
 function render(){
@@ -756,8 +782,8 @@ function render(){
   else renderSettingsView();
 }
 
-function deleteStore(storeId){
-  if(!confirm('Diesen Supermarkt inkl. aller Angebote löschen?')) return;
+async function deleteStore(storeId){
+  if(!await customConfirm('Diesen Supermarkt inkl. aller Angebote löschen?')) return;
   state.stores = state.stores.filter(s=>s.id!==storeId);
   if(activeStoreId===storeId){ activeStoreId = state.stores.length ? state.stores[0].id : null; }
   saveState();
@@ -852,7 +878,7 @@ function renderPriceReference(name){
   const refs = getPriceReferences(name);
   if(refs.length === 0){ box.innerHTML=''; return; }
   box.innerHTML = '<div class="price-reference-label">📅 Zuletzt gesehen</div>' +
-    refs.map(r=>`<span class="ref-chip" data-store="${escapeHtml(r.storeName)}" data-brand="${escapeHtml(r.brand||'')}" data-price="${escapeHtml(r.price||'')}" data-quantity="${escapeHtml(r.quantity||'')}" data-unit="${escapeHtml(r.unit||'')}">${escapeHtml(r.storeName)}${r.brand?' · '+escapeHtml(r.brand):''}${r.price?' · '+escapeHtml(r.price)+'€':''}${r.date?` <span class="ref-date">(${fmtDate(r.date)})</span>`:''}</span>`).join('');
+    refs.map(r=>`<span class="ref-chip" data-store="${escapeAttr(r.storeName)}" data-brand="${escapeAttr(r.brand||'')}" data-price="${escapeAttr(r.price||'')}" data-quantity="${escapeAttr(r.quantity||'')}" data-unit="${escapeAttr(r.unit||'')}">${escapeHtml(r.storeName)}${r.brand?' · '+escapeHtml(r.brand):''}${r.price?' · '+escapeHtml(r.price)+'€':''}${r.date?` <span class="ref-date">(${fmtDate(r.date)})</span>`:''}</span>`).join('');
   box.querySelectorAll('.ref-chip').forEach(chip=>{
     chip.onclick = ()=>{
       const storeName = chip.dataset.store;
@@ -929,7 +955,7 @@ function renderSuggestions(filterText){
   let list = state.productHistory;
   if(q) list = list.filter(n=>n.toLowerCase().includes(q) && n.toLowerCase()!==q);
   list = list.slice(0, 8);
-  suggestionsBox.innerHTML = list.map(name=>`<div class="chip" data-name="${escapeHtml(name)}">${escapeHtml(name)}</div>`).join('');
+  suggestionsBox.innerHTML = list.map(name=>`<div class="chip" data-name="${escapeAttr(name)}">${escapeHtml(name)}</div>`).join('');
   suggestionsBox.querySelectorAll('.chip').forEach(chip=>{
     chip.onclick = ()=>{ inputName.value = chip.dataset.name; renderSuggestions(inputName.value); renderPriceReference(inputName.value); renderBrandSuggestions(inputName.value); };
   });
@@ -950,7 +976,7 @@ function getBrandSuggestions(name){
 
 function renderBrandSuggestions(name){
   const brands = getBrandSuggestions(name);
-  brandSuggestionsBox.innerHTML = brands.map(b=>`<div class="chip" data-brand="${escapeHtml(b)}">${escapeHtml(b)}</div>`).join('');
+  brandSuggestionsBox.innerHTML = brands.map(b=>`<div class="chip" data-brand="${escapeAttr(b)}">${escapeHtml(b)}</div>`).join('');
   brandSuggestionsBox.querySelectorAll('.chip').forEach(chip=>{
     chip.onclick = ()=>{ inputBrand.value = chip.dataset.brand; };
   });
@@ -994,11 +1020,11 @@ function openSheet(existingItem, existingStoreId){
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-function closeWeek(){
+async function closeWeek(){
   const allItems = allItemsFlat();
   const toArchive = allItems.filter(isLikelyExpired);
   if(toArchive.length === 0){ showToast('Keine abgelaufenen Angebote zum Archivieren'); return; }
-  if(!confirm(`${toArchive.length} abgelaufene(s) Angebot(e) ins Archiv verschieben? Aktuelle bzw. schon für die neue Woche eingetragene Angebote bleiben unberührt. Steht eines davon noch auf der Einkaufsliste, wird es dort ebenfalls entfernt.`)) return;
+  if(!await customConfirm(`${toArchive.length} abgelaufene(s) Angebot(e) ins Archiv verschieben? Aktuelle bzw. schon für die neue Woche eingetragene Angebote bleiben unberührt. Steht eines davon noch auf der Einkaufsliste, wird es dort ebenfalls entfernt.`)) return;
 
   const now = todayISO();
   toArchive.forEach(item=>{
@@ -1094,6 +1120,19 @@ function renderSettingsView(){
   header.innerHTML = `<h2>⚙️ Mehr</h2>`;
   main.appendChild(header);
 
+  const hasData = state.stores.length > 0 || (state.archive && state.archive.length > 0);
+  if(hasData && daysSinceLastBackup() >= 7){
+    const reminder = document.createElement('div');
+    reminder.className = 'backup-reminder';
+    reminder.style.marginBottom = '14px';
+    reminder.style.borderRadius = 'var(--radius)';
+    reminder.innerHTML = `<span>📅 Seit über einer Woche kein Backup – jetzt sichern?</span><button id="reminderGoBtn">Sichern</button>`;
+    main.appendChild(reminder);
+    document.getElementById('reminderGoBtn').onclick = ()=>{
+      document.getElementById('backupExportBtn')?.scrollIntoView({behavior:'smooth', block:'center'});
+    };
+  }
+
   const card = document.createElement('div');
   card.className = 'settings-card';
   card.innerHTML = `
@@ -1104,6 +1143,11 @@ function renderSettingsView(){
     <input type="file" id="backupFileInput" accept="application/json" style="display:none;">
   `;
   main.appendChild(card);
+
+  const versionCard = document.createElement('div');
+  versionCard.className = 'settings-card';
+  versionCard.innerHTML = `<h3>ℹ️ Version</h3><p style="margin-bottom:0;">${escapeHtml(APP_VERSION)}</p>`;
+  main.appendChild(versionCard);
 
   document.getElementById('backupExportBtn').onclick = ()=>{
     const dataStr = JSON.stringify(state, null, 2);
@@ -1118,7 +1162,7 @@ function renderSettingsView(){
     URL.revokeObjectURL(url);
     showToast('Backup wird heruntergeladen…');
     markBackedUpNow();
-    maybeShowBackupReminder();
+    renderSettingsView();
   };
 
   document.getElementById('backupImportBtn').onclick = ()=>{
@@ -1129,14 +1173,14 @@ function renderSettingsView(){
     const file = e.target.files[0];
     if(!file) return;
     const reader = new FileReader();
-    reader.onload = (evt)=>{
+    reader.onload = async (evt)=>{
       try{
         const parsed = JSON.parse(evt.target.result);
         if(!parsed || !Array.isArray(parsed.stores)){
           showToast('Ungültige Backup-Datei');
           return;
         }
-        if(!confirm('Aktuelle Daten werden durch das Backup ersetzt. Fortfahren?')) return;
+        if(!await customConfirm('Aktuelle Daten werden durch das Backup ersetzt. Fortfahren?')) return;
         state = parsed;
         if(!state.productHistory) state.productHistory = [];
         if(!state.customUnits) state.customUnits = [];
@@ -1156,7 +1200,6 @@ function renderSettingsView(){
 }
 
 loadState();
-maybeShowBackupReminder();
 </script>
 </body>
 </html>
