@@ -112,6 +112,7 @@
     border-radius:20px; font-weight:700; font-size:13px;
     background:var(--card); color:var(--ink-soft);
     white-space:nowrap; box-shadow:0 2px 6px rgba(58,51,44,0.05);
+    display:inline-flex; align-items:center; justify-content:center; line-height:1;
   }
   .tab.active{background:var(--ink); color:#fff;}
 
@@ -177,13 +178,14 @@
 
   .group-title{
     font-family:'Baloo 2', sans-serif; font-size:16px; font-weight:700;
-    margin:18px 4px 8px; color:var(--ink); display:flex; align-items:baseline; gap:8px;
+    margin:18px 0 8px 16px; color:var(--ink); display:flex; align-items:baseline; gap:8px;
   }
   .group-title:first-of-type{margin-top:4px;}
   .group-count{font-size:12px; font-weight:700; color:var(--ink-soft); font-family:'Nunito', sans-serif;}
   .cheapest-badge{
-    display:block; background:var(--sage); color:#fff; font-size:10px; font-weight:800;
-    border-radius:8px; padding:2px 7px; margin-bottom:4px; text-align:center;
+    flex:0 0 auto; display:inline-flex; align-items:center;
+    background:var(--sage-soft); color:var(--sage); font-size:11px; font-weight:800;
+    border-radius:10px; padding:5px 9px; white-space:nowrap;
   }
 
   .fab{
@@ -237,6 +239,9 @@
   }
   .ref-chip .ref-date{font-weight:600; opacity:0.75; font-size:10px;}
   .ref-chip:active{background:var(--sage); color:#fff;}
+  .duration-chips{display:flex; gap:7px; margin:-8px 0 16px;}
+  .duration-chips .chip{font-size:12px; padding:6px 12px;}
+
   .sheet-actions{display:flex; gap:10px; margin-top:20px;}
   .btn{flex:1; padding:14px; border:none; border-radius:14px; font-family:'Baloo 2', sans-serif; font-size:15px; font-weight:700;}
   .btn-primary{background:var(--coral); color:#fff;}
@@ -303,13 +308,23 @@
 
     <div class="row2">
       <div class="field">
-        <label>Ab wann (optional)</label>
+        <label>Gültig ab (optional)</label>
         <input type="date" id="inputFrom">
       </div>
       <div class="field">
-        <label>Preis (optional)</label>
-        <input type="text" inputmode="decimal" id="inputPrice" placeholder="1,99 €">
+        <label>Gültig bis (optional)</label>
+        <input type="date" id="inputTo">
       </div>
+    </div>
+    <div class="duration-chips" id="durationChips">
+      <span class="chip" data-days="3">3 Tage</span>
+      <span class="chip" data-days="7">1 Woche</span>
+      <span class="chip" data-days="14">2 Wochen</span>
+    </div>
+
+    <div class="field">
+      <label>Preis (optional)</label>
+      <input type="text" inputmode="decimal" id="inputPrice" placeholder="1,99 €">
     </div>
 
     <div class="field">
@@ -342,7 +357,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'V1.3';
+const APP_VERSION = 'V1.5.1';
 const STORAGE_KEY = 'neli-angebote-state-v4';
 const DEFAULT_STORES = ['Rewe','Aldi','Lidl','Kaufland','Netto','Edeka','Alnatura'];
 const DEFAULT_UNITS = ['Stück','kg','g','Liter','ml','Packung'];
@@ -391,7 +406,11 @@ function uid(){ return Math.random().toString(36).slice(2,10); }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
 function fmtDate(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return `${d}.${m}.`; }
 function daysAgo(iso){ if(!iso) return null; const diff = (Date.now() - new Date(iso).getTime())/86400000; return diff; }
-function isLikelyExpired(item){ const d = daysAgo(item.validFrom); return d!==null && d > 7; }
+function isLikelyExpired(item){
+  if(item.validTo) return item.validTo < todayISO();
+  const d = daysAgo(item.validFrom);
+  return d!==null && d > 7;
+}
 
 function loadState(){
   try{
@@ -463,7 +482,10 @@ function renderTabs(){
 
 function itemCardHtml(item, opts){
   const expired = isLikelyExpired(item);
-  const validText = item.validFrom ? `seit ${fmtDate(item.validFrom)}` : '';
+  const validText = item.validFrom && item.validTo ? `${fmtDate(item.validFrom)}–${fmtDate(item.validTo)}`
+    : item.validTo ? `bis ${fmtDate(item.validTo)}`
+    : item.validFrom ? `seit ${fmtDate(item.validFrom)}`
+    : '';
   return `
     <div class="item-card ${expired?'expired':''} ${item.checked?'checked':''}" data-item="${item.id}" data-store="${opts.storeId}">
       ${opts.showCheckbox ? `<div class="checkbox ${item.checked?'checked':''}" data-action="toggle-check">${item.checked?'✓':''}</div>` : ''}
@@ -473,7 +495,8 @@ function itemCardHtml(item, opts){
         ${validText ? `<div class="item-valid ${expired?'expired-tag':''}">${expired?'Wahrscheinlich abgelaufen · ':''}${validText}</div>` : ''}
         ${opts.showStoreTag ? `<div class="item-store-tag">${escapeHtml(opts.storeName)}</div>` : ''}
       </div>
-      ${(item.price || item.quantity || item.unit) ? `<div class="price-tag">${opts.badge ? `<span class="cheapest-badge">${opts.badge}</span>` : ''}${item.price ? escapeHtml(item.price)+'€' : ''}${(item.quantity||item.unit) ? (item.price ? ' / ' : '') + escapeHtml(item.quantity||'') + (item.quantity&&item.unit?' ':'') + escapeHtml(item.unit||'') : ''}</div>` : ''}
+      ${opts.badge ? `<span class="cheapest-badge">${opts.badge}</span>` : ''}
+      ${(item.price || item.quantity || item.unit) ? `<div class="price-tag">${item.price ? escapeHtml(item.price)+'€' : ''}${(item.quantity||item.unit) ? (item.price ? ' / ' : '') + escapeHtml(item.quantity||'') + (item.quantity&&item.unit?' ':'') + escapeHtml(item.unit||'') : ''}</div>` : ''}
       ${opts.showEdit ? `<button class="icon-btn" data-action="edit-item" title="Bearbeiten">✏️</button>` : ''}
       ${opts.showListToggle ? `<button class="icon-btn ${item.onList?'on':''}" data-action="toggle-list" title="Zur Liste">${item.onList?'✓':'+'}</button>` : ''}
       ${opts.showDelete ? `<button class="del-btn" data-action="delete-item">✕</button>` : ''}
@@ -520,7 +543,7 @@ function renderOffersView(){
 
     const searchBox = document.createElement('div');
     searchBox.className = 'field';
-    searchBox.innerHTML = `<input type="text" id="gesamtSearch" placeholder="🔍 Angebote durchsuchen…" value="${escapeAttr(gesamtSearchQuery)}">`;
+    searchBox.innerHTML = `<input type="text" id="gesamtSearch" placeholder="🔍 Produkt oder Marke suchen…" value="${escapeAttr(gesamtSearchQuery)}">`;
     main.appendChild(searchBox);
     searchBox.querySelector('input').oninput = (e)=>{
       gesamtSearchQuery = e.target.value;
@@ -530,7 +553,7 @@ function renderOffersView(){
     };
 
     const q = gesamtSearchQuery.trim().toLowerCase();
-    const filtered = q ? allItems.filter(i=>i.name.toLowerCase().includes(q)) : allItems;
+    const filtered = q ? allItems.filter(i=>i.name.toLowerCase().includes(q) || (i.brand||'').toLowerCase().includes(q)) : allItems;
 
     if(filtered.length === 0){
       const emptyDiv = document.createElement('div');
@@ -566,7 +589,7 @@ function renderOffersView(){
         // Mehrfach-Angebot: gleicher Name in mehreren Läden -> günstigsten Preis markieren
         const withNumericPrice = groupItems.map(i=>({item:i, num: parseFloat((i.price||'').replace(',','.'))})).filter(x=>!isNaN(x.num));
         const cheapestId = withNumericPrice.length ? withNumericPrice.reduce((a,b)=>a.num<=b.num?a:b).item.id : null;
-        wrap.innerHTML += `<div class="group-title">🔁 ${escapeHtml(groupItems[0].name)} <span class="group-count">${groupItems.length}× im Angebot</span></div>`;
+        wrap.innerHTML += `<div class="group-title">${escapeHtml(groupItems[0].name)} <span class="group-count">${groupItems.length}× im Angebot</span></div>`;
         groupItems.forEach(item=>{
           wrap.innerHTML += itemCardHtml(item, {
             storeId:item.storeId, showEdit:true, showListToggle:true, showDelete:true,
@@ -655,7 +678,10 @@ function renderListView(){
 }
 
 function archiveEntryHtml(rec){
-  const dateLabel = rec.validFrom ? fmtDate(rec.validFrom) : (rec.archivedAt ? fmtDate(rec.archivedAt) : '');
+  const dateLabel = rec.validFrom && rec.validTo ? `${fmtDate(rec.validFrom)}–${fmtDate(rec.validTo)}`
+    : rec.validTo ? `bis ${fmtDate(rec.validTo)}`
+    : rec.validFrom ? fmtDate(rec.validFrom)
+    : (rec.archivedAt ? fmtDate(rec.archivedAt) : '');
   return `
     <div class="item-card" data-archive-id="${rec.id}">
       <div class="item-main">
@@ -690,7 +716,7 @@ function renderArchiveView(){
 
   const searchBox = document.createElement('div');
   searchBox.className = 'field';
-  searchBox.innerHTML = `<input type="text" id="archiveSearch" placeholder="🔍 Archiv durchsuchen…" value="${escapeAttr(archiveSearchQuery)}">`;
+  searchBox.innerHTML = `<input type="text" id="archiveSearch" placeholder="🔍 Produkt oder Marke suchen…" value="${escapeAttr(archiveSearchQuery)}">`;
   main.appendChild(searchBox);
   searchBox.querySelector('input').oninput = (e)=>{
     archiveSearchQuery = e.target.value;
@@ -700,7 +726,7 @@ function renderArchiveView(){
   };
 
   const q = archiveSearchQuery.trim().toLowerCase();
-  const filtered = q ? state.archive.filter(r=>r.name.toLowerCase().includes(q)) : state.archive;
+  const filtered = q ? state.archive.filter(r=>r.name.toLowerCase().includes(q) || (r.brand||'').toLowerCase().includes(q)) : state.archive;
 
   if(filtered.length === 0){
     const emptyDiv = document.createElement('div');
@@ -799,6 +825,17 @@ function findItem(storeId, itemId){
 function deleteItem(storeId, itemId){
   const store = state.stores.find(s=>s.id===storeId);
   if(!store) return;
+  const item = store.items.find(i=>i.id===itemId);
+  if(item){
+    if(!state.archive) state.archive = [];
+    state.archive.push({
+      id: uid(),
+      name:item.name, brand:item.brand, storeName:store.name,
+      price:item.price, quantity:item.quantity, unit:item.unit,
+      validFrom:item.validFrom, validTo:item.validTo, archivedAt:todayISO()
+    });
+    if(state.archive.length > 300){ state.archive = state.archive.slice(state.archive.length-300); }
+  }
   store.items = store.items.filter(i=>i.id!==itemId);
   saveState();
   render();
@@ -841,6 +878,20 @@ const suggestionsBox = document.getElementById('suggestions');
 const inputStoreSelect = document.getElementById('inputStoreSelect');
 const inputStoreCustom = document.getElementById('inputStoreCustom');
 const inputFrom = document.getElementById('inputFrom');
+const inputTo = document.getElementById('inputTo');
+
+function addDaysToISO(iso, days){
+  const base = iso ? new Date(iso+'T00:00:00') : new Date();
+  base.setDate(base.getDate() + days);
+  return base.toISOString().slice(0,10);
+}
+
+document.querySelectorAll('#durationChips .chip').forEach(chip=>{
+  chip.onclick = ()=>{
+    if(!inputFrom.value) inputFrom.value = todayISO();
+    inputTo.value = addDaysToISO(inputFrom.value, parseInt(chip.dataset.days, 10));
+  };
+});
 const inputPrice = document.getElementById('inputPrice');
 const inputQuantity = document.getElementById('inputQuantity');
 const inputBrand = document.getElementById('inputBrand');
@@ -1000,6 +1051,7 @@ function openSheet(existingItem, existingStoreId){
   inputQuantity.value = existingItem ? (existingItem.quantity||'') : '';
   inputBrand.value = existingItem ? (existingItem.brand||'') : '';
   inputFrom.value = existingItem ? (existingItem.validFrom||'') : '';
+  inputTo.value = existingItem ? (existingItem.validTo||'') : '';
 
   populateStoreSelect();
   const currentStoreName = existingItem
@@ -1032,7 +1084,7 @@ async function closeWeek(){
       id: uid(),
       name:item.name, brand:item.brand, storeName:item.storeName,
       price:item.price, quantity:item.quantity, unit:item.unit,
-      validFrom:item.validFrom, archivedAt:now
+      validFrom:item.validFrom, validTo:item.validTo, archivedAt:now
     });
     const store = state.stores.find(s=>s.id===item.storeId);
     if(store) store.items = store.items.filter(i=>i.id!==item.id);
@@ -1076,6 +1128,7 @@ document.getElementById('saveBtn').onclick = ()=>{
       item.price = inputPrice.value.trim();
       item.quantity = inputQuantity.value.trim();
       item.validFrom = inputFrom.value;
+      item.validTo = inputTo.value;
       item.unit = unitName;
       if(oldStore.id !== store.id){
         oldStore.items = oldStore.items.filter(i=>i.id!==item.id);
@@ -1091,6 +1144,7 @@ document.getElementById('saveBtn').onclick = ()=>{
       price: inputPrice.value.trim(),
       quantity: inputQuantity.value.trim(),
       validFrom: inputFrom.value,
+      validTo: inputTo.value,
       unit: unitName,
       onList: false, checked: false
     });
