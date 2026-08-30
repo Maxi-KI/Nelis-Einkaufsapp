@@ -55,7 +55,7 @@
   header .logo{width:32px; height:32px; border-radius:10px; flex:0 0 auto; box-shadow:0 4px 10px rgba(255,143,102,0.3);}
   header .title-block{min-width:0; flex:1;}
   header h1{
-    font-size:26px; margin:0; line-height:1.2; font-weight:700;
+    font-size:23px; margin:0; line-height:1.2; font-weight:700;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   header .sub{font-size:12.5px; color:var(--ink-soft); margin-top:2px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -63,7 +63,10 @@
   .main-nav{
     display:flex; gap:8px;
     padding:0 20px 14px;
+    overflow-x:auto; overflow-y:hidden; touch-action:pan-x;
+    -webkit-overflow-scrolling:touch;
   }
+  .main-nav::-webkit-scrollbar{display:none;}
   .backup-reminder-inline{
     background:var(--sage-soft); color:var(--sage);
     padding:10px 12px; border-radius:12px;
@@ -79,12 +82,12 @@
   .settings-card .btn{width:100%; margin-bottom:10px;}
   .settings-card .btn:last-child{margin-bottom:0;}
   .main-nav button{
-    flex:1;
-    padding:10px 4px;
+    flex:0 0 auto;
+    padding:10px 14px;
     border-radius:14px;
     border:none;
     font-family:'Baloo 2', sans-serif;
-    font-size:12.5px;
+    font-size:13px;
     font-weight:600;
     background:var(--card);
     color:var(--ink-soft);
@@ -99,7 +102,7 @@
     padding:1px 7px; min-width:18px;
   }
 
-  .tabs{display:flex; align-items:center; overflow-x:auto; gap:8px; padding:6px 20px 16px; -webkit-overflow-scrolling:touch;}
+  .tabs{display:flex; align-items:center; overflow-x:auto; overflow-y:hidden; touch-action:pan-x; gap:8px; padding:6px 20px 16px; -webkit-overflow-scrolling:touch;}
   .tabs::-webkit-scrollbar{display:none;}
   .tab{
     flex:0 0 auto; padding:9px 16px; box-sizing:border-box;
@@ -147,6 +150,19 @@
     padding:14px 16px; margin-bottom:12px;
     box-shadow:0 3px 10px rgba(58,51,44,0.06);
   }
+  .need-qty{color:var(--coral); font-weight:800;}
+
+  .needs-add-row{display:flex; gap:8px; margin-bottom:16px;}
+  .needs-add-row input{
+    flex:1; border:none; background:var(--card); border-radius:14px;
+    padding:13px 14px; font-size:16px; font-family:'Nunito', sans-serif;
+    box-shadow:0 2px 6px rgba(58,51,44,0.05);
+  }
+  .needs-add-row button{
+    flex:0 0 auto; width:46px; background:var(--coral); color:#fff; border:none;
+    border-radius:14px; font-size:20px; font-weight:700;
+  }
+
   .store-block-title{
     font-family:'Baloo 2', sans-serif; font-weight:700; font-size:15px;
     display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:2px;
@@ -283,6 +299,7 @@
 
 <div class="main-nav">
   <button id="navOffers" class="active">🏷️ Angebote</button>
+  <button id="navNeeds">🔔 Needs <span class="badge" id="needsBadge" style="display:none;">0</span></button>
   <button id="navList">📝 Einkäufe <span class="badge" id="listBadge" style="display:none;">0</span></button>
   <button id="navArchive">🗄️ Archiv</button>
   <button id="navSettings">⚙️ Mehr</button>
@@ -365,6 +382,10 @@
   <div class="sheet">
     <h3 id="confirmTitle">Bist du sicher?</h3>
     <p id="confirmMessage" style="color:var(--ink-soft); font-size:14px; line-height:1.5; margin:0 0 20px;"></p>
+    <div class="field" id="confirmQuantityField" style="display:none;">
+      <label>Menge</label>
+      <input type="number" id="confirmQuantityInput" inputmode="numeric" min="1" value="1">
+    </div>
     <div class="sheet-actions">
       <button class="btn btn-secondary" id="confirmCancelBtn">Abbrechen</button>
       <button class="btn btn-primary" id="confirmOkBtn">Bestätigen</button>
@@ -373,13 +394,13 @@
 </div>
 
 <script>
-const APP_VERSION = 'V2.4.5';
+const APP_VERSION = 'V2.5';
 const STORAGE_KEY = 'neli-angebote-state-v4';
 const DEFAULT_STORES = ['Rewe','Aldi','Lidl','Kaufland','Netto','Edeka','Alnatura'];
 const DEFAULT_UNITS = ['Stück','kg','g','Liter','ml','Packung'];
 const OTHER_OPTION = '__other__';
 
-let state = { stores: [], productHistory: [], customUnits: [], archive: [] };
+let state = { stores: [], productHistory: [], customUnits: [], archive: [], needs: [] };
 let activeStoreId = null;
 let activeView = 'offers';
 let gesamtSearchQuery = '';
@@ -403,6 +424,7 @@ function customConfirm(message){
   return new Promise(resolve=>{
     const overlay = document.getElementById('confirmOverlay');
     document.getElementById('confirmMessage').textContent = message;
+    document.getElementById('confirmQuantityField').style.display = 'none';
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
     const okBtn = document.getElementById('confirmOkBtn');
@@ -416,6 +438,39 @@ function customConfirm(message){
     okBtn.onclick = ()=>cleanup(true);
     cancelBtn.onclick = ()=>cleanup(false);
     overlay.onclick = (e)=>{ if(e.target===overlay) cleanup(false); };
+  });
+}
+
+function promptQuantity(itemName, defaultValue){
+  return new Promise(resolve=>{
+    const overlay = document.getElementById('confirmOverlay');
+    document.getElementById('confirmTitle').textContent = 'Menge festlegen';
+    document.getElementById('confirmMessage').textContent = `Wie viel von "${itemName}" soll eingekauft werden?`;
+    const qtyField = document.getElementById('confirmQuantityField');
+    const qtyInput = document.getElementById('confirmQuantityInput');
+    qtyField.style.display = 'block';
+    qtyInput.value = defaultValue || 1;
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(()=>{ qtyInput.focus(); qtyInput.select(); }, 50);
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+    document.getElementById('confirmTitle').textContent = 'Menge festlegen';
+    const cleanup = (result)=>{
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+      document.getElementById('confirmTitle').textContent = 'Bist du sicher?';
+      okBtn.onclick = null; cancelBtn.onclick = null; overlay.onclick = null; qtyInput.onkeydown = null;
+      resolve(result);
+    };
+    const submit = ()=>{
+      const val = parseInt(qtyInput.value, 10);
+      cleanup(isNaN(val) || val<1 ? 1 : val);
+    };
+    okBtn.onclick = submit;
+    qtyInput.onkeydown = (e)=>{ if(e.key==='Enter') submit(); };
+    cancelBtn.onclick = ()=>cleanup(null);
+    overlay.onclick = (e)=>{ if(e.target===overlay) cleanup(null); };
   });
 }
 
@@ -467,9 +522,11 @@ function loadState(){
       if(!state.productHistory) state.productHistory=[];
       if(!state.customUnits) state.customUnits=[];
       if(!state.archive) state.archive=[];
+      if(!state.needs) state.needs=[];
       state.archive.forEach(rec=>{ if(!rec.id) rec.id = uid(); });
+      state.needs.forEach(n=>{ if(!n.id) n.id = uid(); });
     }
-  }catch(e){ state = { stores: [], productHistory: [], customUnits: [], archive: [] }; }
+  }catch(e){ state = { stores: [], productHistory: [], customUnits: [], archive: [], needs: [] }; }
   if(state.stores.length && !activeStoreId){ activeStoreId = 'ALL'; }
   render();
 }
@@ -496,6 +553,7 @@ function allItemsFlat(){
 
 function renderNav(){
   document.getElementById('navOffers').classList.toggle('active', activeView==='offers');
+  document.getElementById('navNeeds').classList.toggle('active', activeView==='needs');
   document.getElementById('navList').classList.toggle('active', activeView==='list');
   document.getElementById('navArchive').classList.toggle('active', activeView==='archive');
   document.getElementById('navSettings').classList.toggle('active', activeView==='settings');
@@ -504,7 +562,8 @@ function renderNav(){
 
   // Unterer Abstand richtet sich danach, wie viele schwebende Buttons auf der jeweiligen Seite liegen
   const main = document.getElementById('main');
-  const floatingCount = activeView==='list' ? 2 : activeView==='offers' ? 1 : 0;
+  const needsFloating = state.needs.some(n=>n.checked) ? 2 : 1;
+  const floatingCount = activeView==='list' ? 2 : activeView==='needs' ? needsFloating : activeView==='offers' ? 1 : 0;
   const bottomPx = floatingCount===2 ? 158 : floatingCount===1 ? 96 : 24;
   main.style.paddingBottom = `calc(${bottomPx}px + env(safe-area-inset-bottom))`;
 
@@ -512,6 +571,11 @@ function renderNav(){
   const badge = document.getElementById('listBadge');
   if(listCount>0){ badge.style.display='inline-block'; badge.textContent = listCount; }
   else{ badge.style.display='none'; }
+
+  const needsCount = state.needs.filter(n=>!n.checked).length;
+  const needsBadge = document.getElementById('needsBadge');
+  if(needsCount>0){ needsBadge.style.display='inline-block'; needsBadge.textContent = needsCount; }
+  else{ needsBadge.style.display='none'; }
 }
 
 function renderTabs(){
@@ -543,7 +607,7 @@ function itemCardHtml(item, opts){
     <div class="item-card ${opts.nested?'nested':''} ${expired?'expired':''} ${item.checked?'checked':''}" data-item="${item.id}" data-store="${opts.storeId}">
       ${opts.showCheckbox ? `<div class="checkbox ${item.checked?'checked':''}" data-action="toggle-check">${item.checked?'✓':''}</div>` : ''}
       <div class="item-main">
-        ${opts.hideName ? '' : `<div class="item-name">${escapeHtml(item.name)}</div>`}
+        ${opts.hideName ? '' : `<div class="item-name">${opts.showCheckbox && item.neededQuantity ? `<span class="need-qty">${item.neededQuantity}×</span> ` : ''}${escapeHtml(item.name)}</div>`}
         ${item.brand ? `<div class="item-brand-tag">${escapeHtml(item.brand)}</div>` : ''}
         ${validText ? `<div class="item-valid ${expired?'expired-tag':''}">${expired?'Wahrscheinlich abgelaufen · ':''}${validText}</div>` : ''}
         ${opts.showStoreTag ? `<div class="item-store-tag">${escapeHtml(opts.storeName)}</div>` : ''}
@@ -758,6 +822,102 @@ function renderListView(){
   attachCardHandlers(main);
 }
 
+function checkAllInStore(storeName){
+  const flat = allItemsFlat().filter(i=>i.onList && i.storeName===storeName);
+  const allChecked = flat.length>0 && flat.every(i=>i.checked);
+  flat.forEach(flatItem=>{
+    const item = findItem(flatItem.storeId, flatItem.id);
+    if(item) item.checked = !allChecked;
+  });
+  saveState();
+  render();
+}
+
+function clearCheckedFromList(){
+  state.stores.forEach(store=>{
+    store.items.forEach(item=>{ if(item.onList && item.checked){ item.onList = false; item.checked = false; } });
+  });
+  saveState();
+  render();
+}
+
+function renderNeedsView(){
+  const main = document.getElementById('main');
+  main.innerHTML = '';
+
+  const addRow = document.createElement('div');
+  addRow.className = 'needs-add-row';
+  addRow.innerHTML = `
+    <input type="text" id="needInput" placeholder="Was wird gebraucht?">
+    <button id="needAddBtn">+</button>
+  `;
+  main.appendChild(addRow);
+
+  const submitNeed = ()=>{
+    const input = document.getElementById('needInput');
+    const name = input.value.trim();
+    if(!name) return;
+    state.needs.push({ id: uid(), name, checked: false, createdAt: todayISO() });
+    input.value = '';
+    saveState();
+    render();
+    document.getElementById('needInput')?.focus();
+  };
+  document.getElementById('needAddBtn').onclick = submitNeed;
+  document.getElementById('needInput').onkeydown = (e)=>{ if(e.key==='Enter') submitNeed(); };
+
+  if(state.needs.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.innerHTML = '<span class="emoji">🔔</span>Noch nichts eingetragen.<br>Trag oben ein, was gebraucht wird — unabhängig von Angeboten oder Läden.';
+    main.appendChild(empty);
+    return;
+  }
+
+  const sorted = [...state.needs].sort((a,b)=> (a.checked===b.checked)?0:(a.checked?1:-1));
+  const wrap = document.createElement('div');
+  wrap.innerHTML = sorted.map(n=>`
+    <div class="item-card ${n.checked?'checked':''}" data-need-id="${n.id}">
+      <div class="checkbox ${n.checked?'checked':''}" data-action="toggle-need">${n.checked?'✓':''}</div>
+      <div class="item-main"><div class="item-name">${escapeHtml(n.name)}</div></div>
+      <button class="del-btn" data-action="delete-need">✕</button>
+    </div>
+  `).join('');
+  main.appendChild(wrap);
+
+  wrap.querySelectorAll('[data-action="toggle-need"]').forEach(el=>{
+    el.onclick = (e)=>toggleNeedChecked(e.target.closest('.item-card').dataset.needId);
+  });
+  wrap.querySelectorAll('[data-action="delete-need"]').forEach(el=>{
+    el.onclick = (e)=>deleteNeed(e.target.closest('.item-card').dataset.needId);
+  });
+
+  if(state.needs.some(n=>n.checked)){
+    const clearBtn = document.createElement('button');
+    clearBtn.className = 'fab secondary';
+    clearBtn.textContent = 'Erledigte entfernen';
+    clearBtn.onclick = clearCheckedNeeds;
+    document.body.appendChild(clearBtn);
+  }
+}
+
+function toggleNeedChecked(id){
+  const n = state.needs.find(x=>x.id===id);
+  if(n){ n.checked = !n.checked; saveState(); render(); }
+}
+
+function deleteNeed(id){
+  state.needs = state.needs.filter(x=>x.id!==id);
+  saveState();
+  render();
+}
+
+function clearCheckedNeeds(){
+  state.needs = state.needs.filter(n=>!n.checked);
+  saveState();
+  render();
+}
+
 function archiveEntryHtml(rec){
   const dateLabel = rec.validFrom && rec.validTo ? `${fmtDate(rec.validFrom)}–${fmtDate(rec.validTo)}`
     : rec.validTo ? `bis ${fmtDate(rec.validTo)}`
@@ -881,6 +1041,7 @@ function render(){
   renderNav();
   renderTabs();
   if(activeView==='offers') renderOffersView();
+  else if(activeView==='needs') renderNeedsView();
   else if(activeView==='list') renderListView();
   else if(activeView==='archive') renderArchiveView();
   else renderSettingsView();
@@ -919,11 +1080,18 @@ function deleteItem(storeId, itemId){
   render();
 }
 
-function toggleOnList(storeId, itemId){
+async function toggleOnList(storeId, itemId){
   const item = findItem(storeId, itemId);
   if(!item) return;
-  item.onList = !item.onList;
-  if(!item.onList) item.checked = false;
+  if(!item.onList){
+    const qty = await promptQuantity(item.name, item.neededQuantity || 1);
+    if(qty === null) return; // abgebrochen
+    item.onList = true;
+    item.neededQuantity = qty;
+  } else {
+    item.onList = false;
+    item.checked = false;
+  }
   saveState();
   render();
 }
@@ -979,26 +1147,8 @@ async function exportListForLarsi(){
   }
 }
 
-function checkAllInStore(storeName){
-  const flat = allItemsFlat().filter(i=>i.onList && i.storeName===storeName);
-  const allChecked = flat.length>0 && flat.every(i=>i.checked);
-  flat.forEach(flatItem=>{
-    const item = findItem(flatItem.storeId, flatItem.id);
-    if(item) item.checked = !allChecked;
-  });
-  saveState();
-  render();
-}
-
-function clearCheckedFromList(){
-  state.stores.forEach(store=>{
-    store.items.forEach(item=>{ if(item.onList && item.checked){ item.onList = false; item.checked = false; } });
-  });
-  saveState();
-  render();
-}
-
 document.getElementById('navOffers').onclick = ()=>{ activeView='offers'; render(); };
+document.getElementById('navNeeds').onclick = ()=>{ activeView='needs'; render(); };
 document.getElementById('navList').onclick = ()=>{ activeView='list'; render(); };
 document.getElementById('navArchive').onclick = ()=>{ activeView='archive'; render(); };
 document.getElementById('navSettings').onclick = ()=>{ activeView='settings'; render(); };
@@ -1375,7 +1525,9 @@ function renderSettingsView(){
         if(!state.productHistory) state.productHistory = [];
         if(!state.customUnits) state.customUnits = [];
         if(!state.archive) state.archive = [];
+        if(!state.needs) state.needs = [];
         state.archive.forEach(rec=>{ if(!rec.id) rec.id = uid(); });
+        state.needs.forEach(n=>{ if(!n.id) n.id = uid(); });
         activeStoreId = state.stores.length ? state.stores[0].id : null;
         saveState();
         render();
