@@ -89,6 +89,7 @@
     font-family:'Baloo 2', sans-serif;
     font-size:13px;
     font-weight:600;
+    line-height:18px;
     background:var(--card);
     color:var(--ink-soft);
     display:flex; align-items:center; justify-content:center; gap:4px;
@@ -97,6 +98,7 @@
     position:relative;
   }
   .main-nav button.active{background:var(--coral-soft); color:var(--coral); font-weight:800;}
+  .main-nav button > *{line-height:18px;}
   .main-nav .badge{
     position:absolute; top:-3px; right:-3px;
     background:var(--coral); color:#fff;
@@ -113,7 +115,7 @@
     background:var(--card); color:var(--ink-soft);
     border:1.5px solid rgba(58,51,44,0.12);
     white-space:nowrap; box-shadow:0 2px 6px rgba(58,51,44,0.05);
-    display:inline-flex; align-items:center; justify-content:center; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center; line-height:18px;
   }
   .tab.active{background:var(--ink); color:#fff; border-color:var(--ink);}
 
@@ -397,7 +399,7 @@
 </div>
 
 <script>
-const APP_VERSION = 'V2.5.2';
+const APP_VERSION = 'V2.5.3';
 const STORAGE_KEY = 'neli-angebote-state-v4';
 const DEFAULT_STORES = ['Rewe','Aldi','Lidl','Kaufland','Netto','Edeka','Alnatura'];
 const DEFAULT_UNITS = ['Stück','kg','g','Liter','ml','Packung'];
